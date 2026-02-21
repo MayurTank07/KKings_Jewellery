@@ -1,16 +1,240 @@
-import React from 'react'
+import React, { Suspense, lazy } from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+
+import { CartProvider } from './customer/context/CartContext'
+import { ProductProvider } from './customer/context/ProductContext'
+import { AuthProvider } from './customer/context/AuthContext'
+import { AdminAuthProvider } from './admin/context/AdminAuthContext'
+import { OrderProvider } from './admin/context/OrderContext'
+
 import Navbar from './customer/components/navigation/Navbar'
+import Footer from './customer/components/Footer/Footer'
+
 import HomePage from './customer/pages/HomePage/HomePage'
+import OurStory from './customer/pages/OurStory/OurStory'
+import Cart from './customer/components/Cart/Cart'
+import Checkout from './customer/components/Checkout/Checkout'
+import Login from './customer/components/Account/Login'
+import SignIn from './customer/components/Account/SignIn'
+import Account from './customer/components/Account/Account'
+import Payment from './customer/components/Payment/Payment'
+import OrderSuccess from './customer/pages/OrderSuccess/OrderSuccess'
+
+import AdminLogin from './admin/AdminLogin'
+import { AdminRoute } from './admin/AdminRoute'
+
+// Lazy imports
+const ProductDetails = lazy(() =>
+  import('./customer/components/ProductDetails.jsx/ProductDetails')
+)
+const ShopPage = lazy(() => import('./customer/pages/Shop/ShopPage'))
+
+// Admin lazy
+const AdminOnlyLayout = lazy(() => import('./admin/AdminOnlyLayout'))
+const Dashboard = lazy(() => import('./admin/layout/Dashboard'))
+const ProductsManagement = lazy(() => import('./admin/layout/ProductsManagement'))
+const Analytics = lazy(() => import('./admin/layout/Analytics'))
+const AdminReports = lazy(() => import('./admin/pages/AdminReports'))
+const ProductUpload = lazy(() => import('./admin/ProductUpload'))
+const AdminOrders = lazy(() => import('./admin/pages/AdminOrders'))
+const HomePageEditor = lazy(() => import('./admin/layout/HomePageEditor'))
+const FooterEditor = lazy(() => import('./admin/layout/FooterEditor'))
+const OurStoryEditor = lazy(() => import('./admin/layout/OurStoryEditor'))
+const Pages = lazy(() => import('./admin/layout/Pages'))
+
+// Customer Layout
+const CustomerLayout = ({ children }) => (
+  <>
+    <Navbar />
+    {children}
+    <Footer />
+  </>
+)
+
 const App = () => {
   return (
-    <div>
-      <Navbar />
-    
-    <div>
-      <HomePage />
-    </div>
-    </div> 
+    <Router>
+      <AdminAuthProvider>
+        <OrderProvider>
+          <AuthProvider>
+            <ProductProvider>
+              <CartProvider>
+
+                <Suspense fallback={<div className="p-6">Loading...</div>}>
+
+                  <Routes>
+
+                    {/* ================= CUSTOMER ROUTES ================= */}
+                    <Route path="/" element={<CustomerLayout><HomePage /></CustomerLayout>} />
+
+                    <Route path="/product/:id" element={<CustomerLayout><ProductDetails /></CustomerLayout>} />
+
+                    <Route path="/shop" element={<CustomerLayout><ShopPage /></CustomerLayout>} />
+                    <Route path="/shop/:category" element={<CustomerLayout><ShopPage /></CustomerLayout>} />
+
+                    <Route path="/our-story" element={<CustomerLayout><OurStory /></CustomerLayout>} />
+
+                    <Route path="/cart" element={<CustomerLayout><Cart /></CustomerLayout>} />
+                    <Route path="/checkout" element={<CustomerLayout><Checkout /></CustomerLayout>} />
+                    <Route path="/payment" element={<CustomerLayout><Payment /></CustomerLayout>} />
+
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<SignIn />} />
+
+                    <Route path="/account" element={<CustomerLayout><Account /></CustomerLayout>} />
+                    <Route path="/order-success" element={<CustomerLayout><OrderSuccess /></CustomerLayout>} />
+
+                    {/* ================= ADMIN LOGIN ================= */}
+                    <Route path="/admin-login" element={<AdminLogin />} />
+
+                    {/* ================= ADMIN ROUTES ================= */}
+
+                    {/* Dashboard */}
+                    <Route
+                      path="/admin"
+                      element={
+                        <AdminRoute><DashboardWrapper /></AdminRoute>
+                      }
+                    />
+
+                    {/* Products */}
+                    <Route
+                      path="/admin/products"
+                      element={
+                        <AdminRoute><ProductsWrapper /></AdminRoute>
+                      }
+                    />
+
+                    {/* Orders */}
+                    <Route
+                      path="/admin/orders"
+                      element={
+                        <AdminRoute><OrdersWrapper /></AdminRoute>
+                      }
+                    />
+
+                    {/* Analytics */}
+                    <Route
+                      path="/admin/analytics"
+                      element={
+                        <AdminRoute><AnalyticsWrapper /></AdminRoute>
+                      }
+                    />
+
+                    {/* Reports */}
+                    <Route
+                      path="/admin/reports"
+                      element={
+                        <AdminRoute><ReportsWrapper /></AdminRoute>
+                      }
+                    />
+
+                    {/* Upload */}
+                    <Route
+                      path="/admin/upload"
+                      element={
+                        <AdminRoute><UploadWrapper /></AdminRoute>
+                      }
+                    />
+
+                    {/* CMS */}
+                    <Route
+                      path="/admin/cms/home"
+                      element={<AdminRoute><HomeCMSWrapper /></AdminRoute>}
+                    />
+
+                    <Route
+                      path="/admin/cms/footer"
+                      element={<AdminRoute><FooterCMSWrapper /></AdminRoute>}
+                    />
+
+                    <Route
+                      path="/admin/cms/our-story"
+                      element={<AdminRoute><StoryCMSWrapper /></AdminRoute>}
+                    />
+
+                    {/* Pages */}
+                    <Route
+                      path="/admin/pages"
+                      element={<AdminRoute><PagesWrapper /></AdminRoute>}
+                    />
+
+                    {/* Fallback */}
+                    <Route path="*" element={<CustomerLayout><HomePage /></CustomerLayout>} />
+
+                  </Routes>
+
+                </Suspense>
+
+              </CartProvider>
+            </ProductProvider>
+          </AuthProvider>
+        </OrderProvider>
+      </AdminAuthProvider>
+    </Router>
   )
 }
 
 export default App
+
+// ================= WRAPPERS (CLEAN FIX) =================
+
+const DashboardWrapper = () => (
+  <AdminOnlyLayout>
+    <Dashboard />
+  </AdminOnlyLayout>
+)
+
+const ProductsWrapper = () => (
+  <AdminOnlyLayout>
+    <ProductsManagement />
+  </AdminOnlyLayout>
+)
+
+const OrdersWrapper = () => (
+  <AdminOnlyLayout>
+    <AdminOrders />
+  </AdminOnlyLayout>
+)
+
+const AnalyticsWrapper = () => (
+  <AdminOnlyLayout>
+    <Analytics />
+  </AdminOnlyLayout>
+)
+
+const ReportsWrapper = () => (
+  <AdminOnlyLayout>
+    <AdminReports />
+  </AdminOnlyLayout>
+)
+
+const UploadWrapper = () => (
+  <AdminOnlyLayout>
+    <ProductUpload />
+  </AdminOnlyLayout>
+)
+
+const HomeCMSWrapper = () => (
+  <AdminOnlyLayout>
+    <HomePageEditor />
+  </AdminOnlyLayout>
+)
+
+const FooterCMSWrapper = () => (
+  <AdminOnlyLayout>
+    <FooterEditor />
+  </AdminOnlyLayout>
+)
+
+const StoryCMSWrapper = () => (
+  <AdminOnlyLayout>
+    <OurStoryEditor />
+  </AdminOnlyLayout>
+)
+
+const PagesWrapper = () => (
+  <AdminOnlyLayout>
+    <Pages />
+  </AdminOnlyLayout>
+)

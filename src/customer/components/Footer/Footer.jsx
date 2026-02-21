@@ -1,20 +1,32 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Instagram, WhatsApp } from '@mui/icons-material'
+import { Link } from 'react-router-dom'
+import { getContent, DEFAULT_CONTENT } from '../../../utils/contentStorage'
 
 export default function Footer() {
+  const [content, setContent] = useState(DEFAULT_CONTENT.footer)
+
+  useEffect(() => {
+    const footerContent = getContent('FOOTER')
+    if (footerContent) {
+      setContent(footerContent)
+    }
+  }, [])
+
   return (
     <footer className="bg-[#7a1c1c] text-white py-10 mt-12">
       <div className="mx-auto max-w-7xl px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
         
         {/* Brand / Tagline */}
         <div>
-          <h2 className="text-2xl font-bold">✨ KKings Jewellery</h2>
+          <h2 className="text-2xl font-bold">{content.brandName}</h2>
           <p className="text-sm mt-2 text-red-100">
-            Premium Jewellery crafted with elegance and love.
+            {content.tagline}
           </p>
           <p className="text-sm text-red-200 mt-1">
-            Trusted by 2 Lakh+ Customers
+            {content.trustline}
           </p>
         </div>
 
@@ -22,10 +34,13 @@ export default function Footer() {
         <div>
           <h3 className="text-lg font-semibold mb-3">Quick Links</h3>
           <ul className="space-y-2 text-sm text-red-100">
-            <li><a href="/shop" className="hover:text-yellow-200">Shop</a></li>
-            <li><a href="/about" className="hover:text-yellow-200">About Us</a></li>
-            <li><a href="/contact" className="hover:text-yellow-200">Contact</a></li>
-            <li><a href="/faq" className="hover:text-yellow-200">FAQs</a></li>
+            {content.quickLinks.map((link, idx) => (
+              <li key={idx}>
+                <Link to={link.url} className="hover:text-yellow-200">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
 
@@ -33,14 +48,14 @@ export default function Footer() {
         <div>
           <h3 className="text-lg font-semibold mb-3">Connect With Us</h3>
           <p className="text-sm text-red-100 mb-3">
-            📍 Mumbai, Maharashtra, India <br />
-            📞 +91 8329972432 <br />
-            ✉️ support@kkingsjewellery.com
+            {content.contact.address} <br />
+            {content.contact.phone} <br />
+            {content.contact.email}
           </p>
           <div className="flex space-x-4">
             {/* Instagram */}
             <a
-              href="https://www.instagram.com/kkings_jewellery"
+              href={content.socialLinks.instagram}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-tr from-pink-500 to-yellow-500 hover:scale-110 transition-transform duration-300"
@@ -50,7 +65,7 @@ export default function Footer() {
 
             {/* WhatsApp */}
             <a
-              href="https://wa.me/+918329972432"
+              href={content.socialLinks.whatsapp}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center w-10 h-10 rounded-full bg-green-500 hover:scale-110 transition-transform duration-300"
@@ -63,7 +78,7 @@ export default function Footer() {
 
       {/* Bottom Note */}
       <div className="mt-8 text-center text-sm text-red-200 border-t border-red-600 pt-4">
-        © {new Date().getFullYear()} KKingsJewellery. All rights reserved. | Designed with ❤️
+        {content.copyright.replace('{year}', new Date().getFullYear())}
       </div>
     </footer>
   )

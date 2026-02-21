@@ -1,57 +1,58 @@
 'use client'
 
-import React from 'react'
-import AliceCarousel from 'react-alice-carousel'
+import { memo, useMemo, lazy, Suspense } from 'react'
 import 'react-alice-carousel/lib/alice-carousel.css'
 import { MainCarosalData } from '../../components/HomeCarosal/MainCarosalData'
 
-const MainCarosal = () => {
-  const items = MainCarosalData.map((item, index) => (
-    <div key={index} className="relative w-full h-[90vh]">
-      
-      {/* Background Image */}
-      <img
-        src={item.image}
-        alt={item.title}
-        className="w-full h-full object-cover"
-        role="presentation"
-      />
+// ✅ Vite-safe lazy loading
+const AliceCarousel = lazy(() => import('react-alice-carousel'))
 
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black/40"></div>
+function MainCarosal() {
+  const items = useMemo(
+    () =>
+      MainCarosalData.map((item, index) => (
+        <div key={index} className="relative w-full h-[60vh] md:h-screen">
+          <img
+            src={item.image}
+            alt={item.title}
+            className="w-full h-full object-cover"
+            loading={index === 0 ? 'eager' : 'lazy'}
+          />
 
-      {/* Content */}
-      <div className="absolute inset-0 flex items-center justify-center text-center px-4">
-        <div className="text-white max-w-3xl">
-          
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-semibold tracking-widest uppercase">
-            {item.title}
-          </h1>
+          <div className="absolute inset-0 bg-black/40" />
 
-          <p className="mt-4 text-sm md:text-lg text-gray-200 tracking-wide">
-            {item.subtitle}
-          </p>
+          <div className="absolute inset-0 flex items-center justify-center text-center px-4">
+            <div className="text-white max-w-3xl">
+              <h1 className="text-3xl md:text-5xl lg:text-6xl font-semibold tracking-widest uppercase">
+                {item.title}
+              </h1>
 
-          <button className="mt-8 px-8 py-3 border border-white text-white uppercase tracking-wider hover:bg-white hover:text-black transition duration-300">
-            {item.cta}
-          </button>
+              <p className="mt-4 text-sm md:text-lg text-gray-200 tracking-wide">
+                {item.subtitle}
+              </p>
 
+              <button className="mt-8 px-8 py-3 border border-white text-white uppercase tracking-wider hover:bg-white hover:text-black transition">
+                {item.cta}
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  ))
+      )),
+    []
+  )
 
   return (
-    <AliceCarousel
-      items={items}
-      disableButtonsControls
-      disableDotsControls
-      autoPlay
-      autoPlayInterval={1000}
-      infinite
-      animationDuration={1200}
-    />
+    <Suspense fallback={null}>
+      <AliceCarousel
+        items={items}
+        disableButtonsControls
+        disableDotsControls
+        autoPlay
+        autoPlayInterval={3500}
+        infinite
+        animationDuration={1000}
+      />
+    </Suspense>
   )
 }
-
-export default MainCarosal
+export default memo(MainCarosal)
