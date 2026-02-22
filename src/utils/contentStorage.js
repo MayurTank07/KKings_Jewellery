@@ -113,9 +113,9 @@ export const DEFAULT_CONTENT = {
         type: 'timeline',
         title: 'Our Journey',
         items: [
-          { year: '2019', text: 'First handcrafted gold chain created.' },
-          { year: '2021', text: 'Brand officially launched.' },
-          { year: '2023', text: 'Expanded premium collections.' },
+          { year: '2023', text: 'Started with KKings Jewellery.' },
+          { year: '2024', text: 'Brand officially launched.' },
+          { year: '2025', text: 'Expanded premium collections.' },
           { year: 'Today', text: 'Trusted by thousands nationwide.' },
         ],
       },

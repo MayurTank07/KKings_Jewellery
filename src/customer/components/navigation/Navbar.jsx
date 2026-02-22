@@ -22,17 +22,11 @@ const shopCategories = [
   { name: 'Rudraksh', image: 'https://res.cloudinary.com/dkbxrhe1v/image/upload/v1768828248/rudraksh_jik5vi.jpg' },
 ]
 
-const navLinks = [
-  { name: 'Home', path: '/' },
-  { name: 'Our Story', path: '/our-story' },
-]
-
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
 
-  // ✅ Handle account icon click: navigate based on login status
   const handleAccountClick = () => {
     if (isAuthenticated) {
       navigate('/account')
@@ -54,7 +48,7 @@ export default function Navbar() {
       {/* Navbar */}
       <nav className="border-b border-gray-200">
 
-        {/* Top row */}
+        {/* Top Row */}
         <div className="relative max-w-7xl mx-auto px-4 lg:px-6 h-20 flex items-center justify-between">
 
           {/* Left */}
@@ -87,31 +81,33 @@ export default function Navbar() {
           {/* Icons */}
           <div className="flex items-center gap-5 text-[#ae0b0b]">
             <MagnifyingGlassIcon className="h-5 w-5 cursor-pointer" />
-            {/* ✅ Account icon: Navigate to /account if logged in, /login if not */}
-            <button onClick={handleAccountClick} className="cursor-pointer hover:opacity-70 transition">
+
+            <button
+              onClick={handleAccountClick}
+              className="cursor-pointer hover:opacity-70 transition"
+            >
               <UserCircleIcon className="h-5 w-5" />
             </button>
+
             <Link to="/cart">
               <ShoppingBagIcon className="h-5 w-5 cursor-pointer" />
             </Link>
           </div>
         </div>
 
-        {/* Desktop nav */}
+        {/* Desktop Nav */}
         <div className="hidden lg:block border-t border-gray-100">
-          <div className="max-w-7xl mx-auto px-6 py-4 flex justify-center gap-14">
+          <div className="max-w-7xl mx-auto px-6 py-4 flex justify-center items-center gap-14">
 
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.path}
-                className="font-medium hover:text-[#ae0b0b]"
-              >
-                {link.name}
-              </Link>
-            ))}
+            {/* Home */}
+            <Link
+              to="/"
+              className="font-medium hover:text-[#ae0b0b]"
+            >
+              Home
+            </Link>
 
-            {/* Shop All mega menu */}
+            {/* Shop All */}
             <Popover className="relative">
               <Popover.Button className="font-medium text-[#ae0b0b]">
                 Shop All
@@ -139,10 +135,18 @@ export default function Navbar() {
               </Transition>
             </Popover>
 
+            {/* Our Story */}
+            <Link
+              to="/our-story"
+              className="font-medium hover:text-[#ae0b0b]"
+            >
+              Our Story
+            </Link>
+
           </div>
         </div>
 
-        {/* Mobile menu */}
+        {/* Mobile Menu */}
         <Dialog open={mobileOpen} onClose={setMobileOpen} className="lg:hidden">
           <div className="fixed inset-0 bg-black/30 z-40" />
           <Dialog.Panel className="fixed inset-y-0 left-0 w-[85%] bg-white z-50 p-6">
@@ -152,12 +156,9 @@ export default function Navbar() {
             </button>
 
             <div className="mt-6 space-y-4">
-              {navLinks.map((link) => (
-                <Link key={link.name} to={link.path} className="block text-lg">
-                  {link.name}
-                </Link>
-              ))}
+              <Link to="/" className="block text-lg">Home</Link>
               <Link to="/shop" className="block text-lg">Shop All</Link>
+              <Link to="/our-story" className="block text-lg">Our Story</Link>
             </div>
 
           </Dialog.Panel>

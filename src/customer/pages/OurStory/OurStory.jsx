@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { getContent } from '../../../utils/contentStorage'
 
 const DEFAULT_OUR_STORY = {
@@ -40,16 +40,16 @@ const DEFAULT_OUR_STORY = {
       type: 'timeline',
       title: 'Our Journey',
       items: [
-        { year: '2019', text: 'First handcrafted gold chain created.' },
-        { year: '2021', text: 'Brand officially launched.' },
-        { year: '2023', text: 'Expanded premium collections.' },
+        { year: '2023', text: 'Started with KKings Jewellery.' },
+        { year: '2024', text: 'Brand officially launched.' },
+        { year: '2025', text: 'Expanded premium collections.' },
         { year: 'Today', text: 'Trusted by thousands nationwide.' },
       ],
     },
     {
       id: 'quote',
       type: 'quote',
-      quote: 'Jewellery is not about shine — it\'s about presence.',
+      quote: "Jewellery is not about shine — it's about presence.",
       author: '— Founder, KKings Jewellery',
     },
   ],
@@ -58,14 +58,16 @@ const DEFAULT_OUR_STORY = {
 export default function OurStory() {
   const [content, setContent] = useState(DEFAULT_OUR_STORY)
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     try {
       const storyContent = getContent('OUR_STORY')
+
       if (storyContent && storyContent.hero) {
         setContent(storyContent)
       }
-    } catch (error) {
-      console.warn('Failed to load OurStory content, using defaults')
+    } catch {
+      console.warn('Failed to load OurStory content')
     }
   }, [])
 
@@ -91,7 +93,7 @@ export default function OurStory() {
       </section>
 
       {/* CONTENT */}
-      {content.sections.map((section) => {
+        {content.sections.map((section) => {
         if (section.type === 'text_image') {
           const isImageRight = section.imagePosition === 'right'
 
@@ -176,7 +178,10 @@ export default function OurStory() {
 
         if (section.type === 'quote') {
           return (
-            <section key={section.id} className="max-w-4xl mx-auto px-6 py-24 text-center">
+            <section
+              key={section.id}
+              className="max-w-4xl mx-auto px-6 py-24 text-center"
+            >
               <blockquote className="text-2xl md:text-3xl font-semibold leading-relaxed">
                 "{section.quote}"
               </blockquote>
