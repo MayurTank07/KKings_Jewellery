@@ -9,7 +9,6 @@ export function CartProvider({ children }) {
       const raw = localStorage.getItem('kk_cart')
       return raw ? JSON.parse(raw) : []
     } catch (error) {
-      console.warn('Failed to load cart from localStorage:', error)
       return []
     }
   })
@@ -94,7 +93,7 @@ export function CartProvider({ children }) {
     try {
       localStorage.removeItem('kk_checkout_data')
     } catch (error) {
-      console.warn('Failed to clear checkout data:', error)
+      // Failed to clear, continue anyway
     }
   }
 

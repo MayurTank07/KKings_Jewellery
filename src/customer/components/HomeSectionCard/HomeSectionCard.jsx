@@ -2,6 +2,7 @@
 
 import { memo } from 'react'
 import { useCart } from '../../context/useCart'
+import { optimizeCloudinaryUrl } from '../../../utils/cloudinary'
 
 const HomeSectionCard = ({ product }) => {
   const {
@@ -54,7 +55,7 @@ const HomeSectionCard = ({ product }) => {
       <div className="relative w-full aspect-[4/5] rounded-xl overflow-hidden border border-[#ead9ad] bg-[#fffaf3] flex-shrink-0">
 
         <img
-          src={safeImage}
+          src={optimizeCloudinaryUrl(safeImage)}
           alt={safeTitle}
           loading="eager"
           decoding="async"

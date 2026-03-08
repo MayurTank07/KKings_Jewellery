@@ -3,26 +3,40 @@
 import { useState, useEffect } from 'react'
 import AdminCard from './AdminCard'
 import AdminButton from './AdminButton'
+import { API_BASE_URL } from '../../config/api'
 
-const API_URL = "http://localhost:5000/api/content/footer"
+const API_URL = `${API_BASE_URL}/content/footer`
 
 export default function FooterEditor() {
   const [content, setContent] = useState(null)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
 
-  // 🔥 FETCH FROM BACKEND
+  const DEFAULT_FOOTER = {
+    brandName: 'KKings Jewellery',
+    tagline: 'Premium Jewellery crafted with elegance and love.',
+    trustline: 'Trusted by 2 Lakh+ Customers',
+    quickLinks: [
+      { label: 'Shop', url: '/shop' },
+      { label: 'Our Story', url: '/our-story' },
+      { label: 'Cart', url: '/cart' },
+    ],
+    contact: { address: '', phone: '', email: '' },
+    socialLinks: { instagram: '', whatsapp: '' },
+    copyright: '© {year} KKings Jewellery. All rights reserved.',
+  }
+
   useEffect(() => {
     const fetchContent = async () => {
       try {
         const res = await fetch(API_URL)
-        const data = await res.json()
-        setContent(data)
-      } catch (error) {
-        console.error(error)
+        const json = await res.json()
+        const saved = json?.data?.data
+        setContent(saved && typeof saved === 'object' ? { ...DEFAULT_FOOTER, ...saved } : DEFAULT_FOOTER)
+      } catch {
+        setContent(DEFAULT_FOOTER)
       }
     }
-
     fetchContent()
   }, [])
 
@@ -70,16 +84,11 @@ export default function FooterEditor() {
 
     try {
       const token = localStorage.getItem('kk_admin_token')
-
       const res = await fetch(API_URL, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`, // 🔐 protected
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(content),
       })
-
       if (res.ok) {
         setMessage('✅ Footer content saved successfully!')
       } else {

@@ -1,6 +1,7 @@
 'use client'
-
-import { MinusIcon, PlusIcon } from '@heroicons/react/24/outline'
+import React from 'react'
+import { MinusIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { optimizeCloudinaryUrlWithSize } from '../../../utils/cloudinary'
 
 export default function CartItem({
   item,
@@ -15,94 +16,69 @@ export default function CartItem({
   const itemTotal = price * item.quantity
 
   return (
-    <div className="bg-white rounded shadow-sm p-4 flex gap-4">
+    <div className="bg-white rounded-2xl border border-gray-200 p-4 flex gap-4 shadow-sm hover:shadow-md transition-shadow">
 
       {/* IMAGE */}
-      <div className="w-28 h-36 border rounded overflow-hidden flex-shrink-0">
+      <div className="w-24 h-24 md:w-28 md:h-28 rounded-xl overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100">
         <img
-          src={item.image}
+          src={optimizeCloudinaryUrlWithSize(item.image, 200)}
           alt={item.name}
+          loading="lazy"
           className="w-full h-full object-cover"
+          onError={(e) => { e.target.src = '' }}
         />
       </div>
 
       {/* DETAILS */}
       <div className="flex-1 min-w-0">
-        <h3 className="font-medium text-gray-900">
-          {item.name}
-        </h3>
-
-        <p className="text-sm text-gray-600 mt-1">
-          Material: {item.material} · {item.purity}
-        </p>
-
-        <p className="text-sm text-gray-600 mt-1">
-          Weight: {item.weight}
-        </p>
-
-        <p className="text-sm text-gray-500 mt-1">
-          Seller:{' '}
-          <span className="font-medium">
-            {item.seller}
-          </span>
-        </p>
-
-        {/* PRICE - FIXED: Show consistent pricing */}
-        <div className="mt-3 flex items-center gap-3 flex-wrap">
-          {originalPrice > price && (
-            <span className="line-through text-gray-400 text-sm">
-              ₹{originalPrice.toLocaleString()}
-            </span>
-          )}
-
-          <span className="text-lg font-semibold text-gray-900">
-            ₹{price.toLocaleString()}
-          </span>
-
-          {discount > 0 && (
-            <span className="text-green-600 text-sm font-medium">
-              {discount}% off
-            </span>
-          )}
-
-          {/* FIXED: Show total for this item */}
-          <span className="ml-auto text-lg font-semibold text-green-700">
-            ₹{itemTotal.toLocaleString()}
-          </span>
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="font-semibold text-gray-900 text-sm md:text-base line-clamp-2">{item.name}</h3>
+          <button
+            onClick={() => onRemove()}
+            className="flex-shrink-0 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+            title="Remove"
+          >
+            <TrashIcon className="h-4 w-4" />
+          </button>
         </div>
 
-        {/* QTY + REMOVE */}
-        <div className="mt-4 flex items-center gap-6">
-          <div className="flex items-center gap-2 border rounded-full p-1">
+        {(item.material || item.purity) && (
+          <p className="text-xs text-gray-500 mt-1">
+            {[item.material, item.purity].filter(Boolean).join(' · ')}
+          </p>
+        )}
+
+        {/* PRICE */}
+        <div className="mt-2 flex items-center gap-2 flex-wrap">
+          <span className="text-base font-bold text-[#ae0b0b]">₹{price.toLocaleString()}</span>
+          {originalPrice > price && (
+            <span className="text-xs text-gray-400 line-through">₹{originalPrice.toLocaleString()}</span>
+          )}
+          {discount > 0 && (
+            <span className="text-xs bg-green-100 text-green-700 font-semibold px-1.5 py-0.5 rounded">{discount}% off</span>
+          )}
+        </div>
+
+        {/* QTY CONTROLS + SUBTOTAL */}
+        <div className="mt-3 flex items-center justify-between">
+          <div className="flex items-center gap-1 border-2 border-gray-200 rounded-xl overflow-hidden">
             <button
               onClick={() => onDecrease()}
               disabled={item.quantity <= 1}
-              className="w-6 h-6 flex items-center justify-center disabled:opacity-40 hover:text-[#ae0b0b] transition"
-              title="Decrease quantity"
+              className="px-3 py-1.5 text-gray-600 hover:bg-gray-100 disabled:opacity-30 transition-colors"
             >
-              <MinusIcon className="h-4 w-4" />
+              <MinusIcon className="h-3.5 w-3.5" />
             </button>
-
-            <span className="w-6 text-center font-medium text-sm">
-              {item.quantity}
-            </span>
-
+            <span className="px-3 py-1.5 font-semibold text-sm min-w-[2rem] text-center">{item.quantity}</span>
             <button
               onClick={() => onIncrease()}
-              className="w-6 h-6 flex items-center justify-center text-[#ae0b0b] hover:opacity-80 transition"
-              title="Increase quantity"
+              className="px-3 py-1.5 text-[#ae0b0b] hover:bg-red-50 transition-colors"
             >
-              <PlusIcon className="h-4 w-4" />
+              <PlusIcon className="h-3.5 w-3.5" />
             </button>
           </div>
 
-          <button
-            onClick={() => onRemove()}
-            className="text-[#ae0b0b] hover:text-red-600 text-sm font-medium transition"
-            title="Remove from cart"
-          >
-            REMOVE
-          </button>
+          <span className="font-bold text-gray-900">₹{itemTotal.toLocaleString()}</span>
         </div>
       </div>
     </div>

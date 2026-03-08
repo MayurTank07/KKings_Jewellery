@@ -2,18 +2,17 @@
 
 import { useState, useEffect } from 'react'
 import { PencilIcon } from '@heroicons/react/24/outline'
+import toast from 'react-hot-toast'
 import AdminCard from './AdminCard'
 import AdminButton from './AdminButton'
+import { API_BASE_URL } from '../../config/api'
 
-const API_BASE = "http://localhost:5000/api/pages"
+const API_BASE = `${API_BASE_URL}/content`
 
 const PAGES = [
-  { id: 'home', name: 'Home', description: 'Homepage content and hero section' },
-  { id: 'about', name: 'About Us', description: 'About page and company story' },
-  { id: 'products', name: 'Products', description: 'Featured products and collections' },
-  { id: 'contact', name: 'Contact', description: 'Contact information and form' },
-  { id: 'faq', name: 'FAQ', description: 'Frequently asked questions' },
-  { id: 'shipping', name: 'Shipping', description: 'Shipping policy and information' },
+  { id: 'home', name: 'Home', description: 'Homepage announcement and section titles' },
+  { id: 'our-story', name: 'Our Story', description: 'Our Story hero, sections, and timeline' },
+  { id: 'footer', name: 'Footer', description: 'Footer brand info, links, and contact' },
 ]
 
 export default function Pages() {
@@ -50,10 +49,10 @@ export default function Pages() {
       })
 
       if (res.ok) {
-        alert(`✅ ${editingPage.name} saved successfully!`)
+        toast.success(`${editingPage.name} saved successfully!`)
         setEditingPage(null)
       } else {
-        alert(`❌ Failed to save`)
+        toast.error('Failed to save')
       }
     } catch (err) {
       console.error(err)

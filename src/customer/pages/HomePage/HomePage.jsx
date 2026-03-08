@@ -3,43 +3,38 @@
 import { memo, lazy, Suspense, useEffect, useState } from 'react'
 import MainCarosal from '../../components/HomeCarosal/MainCarosal'
 import HomeSectionCarosal from '../../components/HomeSectionCarosal/HomeSectionCarosal'
-import { chains } from '../../data/chains'
-import { bracelets } from '../../data/bracelet'
-import { rings } from '../../data/rings'
-import { kada } from '../../data/kada'
-import { bali } from '../../data/bali'
-import { pendals } from '../../data/pendals'
-import { rudraksh } from '../../data/rudraksh'
-import { getContent, DEFAULT_CONTENT } from '../../../utils/contentStorage'
+import { useProduct } from '../../context/ProductContext'
+import { API_BASE_URL } from '../../../config/api'
+
+
 
 // Lazy-load non-critical sections
 const LazyHomeSection = lazy(() =>
   import('../../components/HomeSectionCarosal/HomeSectionCarosal')
 )
 
-// ================= DATA =================
-  const allProducts = [...chains, ...bracelets, ...rings, ...kada, ...bali, ...pendals, ...rudraksh]
-
 function HomePage() {
-  const [content, setContent] = useState(DEFAULT_CONTENT.homePage)
+  const { products, loading: productsLoading } = useProduct()
+  const [categories, setCategories] = useState([])
 
   useEffect(() => {
-    const homeContent = getContent('HOME_PAGE')
-    if (homeContent) {
-      setContent(homeContent)
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/categories`)
+        const data = await res.json()
+        setCategories(data.data?.categories || [])
+      } catch {
+        setCategories([])
+      }
     }
+    fetchCategories()
   }, [])
 
-  // Helper function to get products by section name
-  const getProductsBySection = (sectionId) => {
-    if (sectionId.includes('chain')) return chains
-    if (sectionId.includes('brace')) return bracelets
-    if (sectionId.includes('ring')) return rings
-    if (sectionId.includes('kada')) return kada
-    if (sectionId.includes('bali')) return bali
-    if (sectionId.includes('pendal')) return pendals
-    if (sectionId.includes('rudraksh')) return rudraksh
-    return allProducts
+  const getProductsByCategory = (categoryName) => {
+    if (!products || products.length === 0) return []
+    return products.filter(p =>
+      p.category && p.category.toLowerCase() === categoryName.toLowerCase()
+    )
   }
 
   return (
@@ -49,26 +44,41 @@ function HomePage() {
 
       {/* ================= SECTIONS ================= */}
       <div className="space-y-10 py-20 flex flex-col justify-center px-5 lg:px-10">
+        
+        {productsLoading ? (
+          <div className="text-center py-16">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#ae0b0b]"></div>
+            <p className="mt-4 text-gray-600">Loading products...</p>
+          </div>
+        ) : (
+          <>
+            {categories.slice(0, 2).map((cat) => {
+              const catProducts = getProductsByCategory(cat.name)
+              if (catProducts.length === 0) return null
+              return (
+                <HomeSectionCarosal
+                  key={cat._id}
+                  data={catProducts}
+                  sectionName={cat.name.toUpperCase()}
+                />
+              )
+            })}
 
-        {/* Above-the-fold sections (eager) */}
-        {content.sections.slice(0, 2).map((section) => (
-          <HomeSectionCarosal 
-            key={section.id}
-            data={getProductsBySection(section.id)} 
-            sectionName={section.name} 
-          />
-        ))}
-
-        {/* Below-the-fold sections (lazy) */}
-        <Suspense fallback={null}>
-          {content.sections.slice(2).map((section) => (
-            <LazyHomeSection 
-              key={section.id}
-              data={getProductsBySection(section.id)} 
-              sectionName={section.name} 
-            />
-          ))}
-        </Suspense>
+            <Suspense fallback={null}>
+              {categories.slice(2).map((cat) => {
+                const catProducts = getProductsByCategory(cat.name)
+                if (catProducts.length === 0) return null
+                return (
+                  <LazyHomeSection
+                    key={cat._id}
+                    data={catProducts}
+                    sectionName={cat.name.toUpperCase()}
+                  />
+                )
+              })}
+            </Suspense>
+          </>
+        )}
       </div>
 
       {/* Footer moved to App-level router */}

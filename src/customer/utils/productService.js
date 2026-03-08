@@ -20,7 +20,7 @@ export const loadProducts = () => {
   try {
     const data = localStorage.getItem('kk_products')
     if (!data) {
-      console.log('📦 No products found, starting with empty array')
+      console.log('📦 No products in localStorage, will fetch from API')
       return []
     }
     const products = JSON.parse(data)
@@ -28,7 +28,39 @@ export const loadProducts = () => {
     return Array.isArray(products) ? products : []
   } catch (error) {
     console.error('❌ Error loading products:', error.message)
-    // Fallback: return empty array to prevent app crash
+    return []
+  }
+}
+
+/**
+ * Fetch products from backend API
+ * @returns {Promise<Array>} Array of products from API
+ */
+export const fetchProductsFromAPI = async () => {
+  try {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5003/api'
+    const response = await fetch(`${API_BASE_URL}/products`)
+    
+    if (!response.ok) {
+      console.error(`❌ API Error: HTTP ${response.status}`)
+      return []
+    }
+    
+    const data = await response.json()
+    
+    // Handle API response structure: { success, data: { products: [...] } }
+    let products = []
+    if (data.data && data.data.products && Array.isArray(data.data.products)) {
+      products = data.data.products
+    } else if (data.data && Array.isArray(data.data)) {
+      products = data.data
+    } else if (Array.isArray(data)) {
+      products = data
+    }
+    
+    return products
+  } catch (error) {
+    console.error('Error fetching products:', error.message)
     return []
   }
 }
@@ -73,16 +105,39 @@ export const getProductById = (productId, products) => {
 export const loadCategories = () => {
   try {
     const data = localStorage.getItem('kk_categories')
-    if (!data) {
-      console.log('📂 No categories found, starting with empty array')
-      return []
-    }
+    if (!data) return []
     const categories = JSON.parse(data)
-    console.log(`📂 Loaded ${categories.length} categories from storage`)
     return Array.isArray(categories) ? categories : []
   } catch (error) {
     console.error('❌ Error loading categories:', error.message)
-    // Fallback: return empty array to prevent app crash
+    return []
+  }
+}
+
+/**
+ * Fetch categories from backend API
+ * @returns {Promise<Array>} Array of categories
+ */
+export const fetchCategoriesFromAPI = async () => {
+  try {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5003/api'
+    const response = await fetch(`${API_BASE_URL}/categories`)
+    if (!response.ok) return []
+    const data = await response.json()
+    let categories = []
+    if (data.data && Array.isArray(data.data)) {
+      categories = data.data
+    } else if (Array.isArray(data)) {
+      categories = data
+    }
+    return categories.map(c => ({
+      id: c._id || c.id,
+      name: c.name,
+      slug: c.slug,
+      image: c.image,
+    }))
+  } catch (error) {
+    console.error('Error fetching categories:', error.message)
     return []
   }
 }
@@ -98,7 +153,6 @@ export const saveCategories = (categories) => {
       throw new Error('Categories must be an array')
     }
     localStorage.setItem('kk_categories', JSON.stringify(categories))
-    console.log(`✅ Saved ${categories.length} categories to storage`)
     return true
   } catch (error) {
     console.error('❌ Error saving categories:', error.message)

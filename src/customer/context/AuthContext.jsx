@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react'
+import { API_BASE_URL } from '../../config/api'
 
 export const AuthContext = createContext()
 
@@ -18,7 +19,7 @@ export function AuthProvider({ children }) {
           return
         }
 
-        const res = await fetch('http://localhost:5000/api/customers/profile', {
+        const res = await fetch(`${API_BASE_URL}/customers/profile`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -47,7 +48,7 @@ export function AuthProvider({ children }) {
   // ✅ LOGIN
   const login = async (data) => {
     try {
-      const res = await fetch('http://localhost:5000/api/customers/login', {
+      const res = await fetch(`${API_BASE_URL}/customers/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -88,7 +89,7 @@ export function AuthProvider({ children }) {
   // ✅ REGISTER
   const register = async (data) => {
     try {
-      const res = await fetch('http://localhost:5000/api/customers/register', {
+      const res = await fetch(`${API_BASE_URL}/customers/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -123,7 +124,7 @@ export function AuthProvider({ children }) {
     try {
       const token = localStorage.getItem('token')
 
-      const res = await fetch('http://localhost:5000/api/customers/profile', {
+      const res = await fetch(`${API_BASE_URL}/customers/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

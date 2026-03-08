@@ -5,6 +5,7 @@ import { useProduct } from '../../context/ProductContext'
 import { validateCartStock, processOrderAndDecrementStock } from '../../utils/checkoutValidation'
 import { useOrder } from '../../context/useOrder'
 import { recordSale } from '../../../admin/utils/analyticsStorage'
+import toast from 'react-hot-toast'
 
 const OrderSummary = ({ address = {} }) => {
   const { cartItems, totalPrice, clearCart } = useCart()
@@ -23,13 +24,13 @@ const OrderSummary = ({ address = {} }) => {
   const handlePlaceOrder = async () => {
     // Validate cart and address
     if (cartItems.length === 0) {
-      alert('Your cart is empty. Please add items before placing an order.');
+      toast.error('Your cart is empty. Please add items before placing an order.');
       navigate('/cart')
       return
     }
 
     if (!address.firstName || !address.mobile) {
-      alert('Please complete the delivery address before placing order.')
+      toast.error('Please complete the delivery address before placing order.')
       navigate('/checkout?step=1')
       return
     }
@@ -39,7 +40,7 @@ const OrderSummary = ({ address = {} }) => {
     if (!stockValidation.valid) {
       const errorMessage = stockValidation.errors.join('\n')
       console.error('❌ Stock validation failed:', errorMessage)
-      alert('❌ Cannot place order:\n\n' + errorMessage + '\n\nPlease update your cart.')
+      toast.error('Cannot place order. ' + errorMessage.split('\n')[0] + '. Please update your cart.')
       return
     }
 
@@ -51,7 +52,7 @@ const OrderSummary = ({ address = {} }) => {
       
       if (!orderResult.success) {
         console.error('❌ Order processing failed:', orderResult.error)
-        alert('❌ Error processing order:\n\n' + orderResult.error)
+        toast.error('Error processing order: ' + orderResult.error)
         return
       }
 
@@ -88,25 +89,17 @@ const OrderSummary = ({ address = {} }) => {
       const orderContextResult = createOrder(orderData)
       if (!orderContextResult.success) {
         console.error('❌ Failed to save order to context:', orderContextResult.error)
-        alert('⚠ Warning: Order placed but failed to save to system. Contact support.')
-      } else {
-        console.log('✅ Order saved to context:', orderContextResult.order?.orderId)
+        toast.warning('Order placed but failed to save. Please contact support.')
       }
 
       // ✅ NEW: Record sale in analytics storage
-      const analyticsRecorded = recordSale(orderData)
-      if (analyticsRecorded) {
-        console.log('✅ Sale recorded in analytics:', orderData.orderId)
-      } else {
-        console.warn('⚠ Failed to record sale in analytics:', orderData.orderId)
-      }
+      recordSale(orderData)
 
       // FIXED: Store order locally for backward compatibility
       localStorage.setItem('lastOrder', JSON.stringify(orderData))
-      console.log('✅ Order placed successfully:', orderData)
 
       // Show success message
-      alert('✅ Order placed successfully! Order ID: ' + orderData.orderId)
+      toast.success('Order placed successfully! Order ID: ' + orderData.orderId)
 
       // FIXED: Clear cart after successful order
       clearCart()
@@ -115,7 +108,7 @@ const OrderSummary = ({ address = {} }) => {
       navigate('/')
     } catch (error) {
       console.error('❌ Error placing order:', error)
-      alert('❌ Error placing order. Please try again.')
+      toast.error('Error placing order. Please try again.')
     } finally {
       setIsPlacingOrder(false)
     }

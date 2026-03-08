@@ -1,14 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import {
-  loadProducts,
-  saveProducts,
-  loadCategories,
-  saveCategories,
+  fetchProductsFromAPI,
+  fetchCategoriesFromAPI,
   getProductById,
-} from '../utils/productService'
-import { normalizeProduct, normalizeProducts, syncProductStock } from '../utils/productSchemaNormalizer'
-import { autoSyncIfNeeded } from '../utils/dataSyncInitializer'
-import {
   getCategoryById,
   getProductsByCategory,
   getLowStockProducts,
@@ -17,6 +11,7 @@ import {
   validateProduct,
   initializeProductStock,
 } from '../utils/productService'
+import { normalizeProduct, normalizeProducts, syncProductStock } from '../utils/productSchemaNormalizer'
 
 const ProductContext = createContext()
 
@@ -36,9 +31,10 @@ export const useProduct = () => {
  * - Data persistence layer (service abstraction)
  * - Auto validation
  * - Error-safe storage
+ * - Backend API integration
  * 
  * All operations persist to localStorage via productService layer.
- * Ready for backend API integration without UI changes.
+ * Fetches from backend API on mount.
  */
 export const ProductProvider = ({ children }) => {
   // ========================================================================
@@ -46,44 +42,67 @@ export const ProductProvider = ({ children }) => {
   // ========================================================================
 
   /**
-   * Initialize products from service layer
-   * Falls back to empty array if localStorage is corrupted
-   * Normalizes all products to consistent schema
-   * Auto-syncs data if needed
+   * Initialize products as empty array
+   * Products will be loaded ONLY from API
    */
-  const [products, setProducts] = useState(() => {
-    // Auto-sync data if needed on initialization
-    const syncedProducts = autoSyncIfNeeded()
-    return normalizeProducts(syncedProducts || [])
-  })
+  const [products, setProducts] = useState([])
 
   /**
-   * Initialize categories from service layer
-   * Falls back to empty array if localStorage is corrupted
+   * Initialize categories as empty array
+   * Categories will be loaded ONLY from API
    */
-  const [categories, setCategories] = useState(() => {
-    return loadCategories()
-  })
+  const [categories, setCategories] = useState([])
+
+  const [loading, setLoading] = useState(true)
 
   // ========================================================================
-  // PERSISTENCE EFFECTS
+  // API FETCH ON MOUNT
   // ========================================================================
 
   /**
-   * Auto-persist products to localStorage whenever they change
-   * Uses service layer for error handling
+   * Fetch products and categories from backend API on mount
+   * ONLY SOURCE OF TRUTH - no localStorage fallback
    */
+  const fetchData = async () => {
+    setLoading(true)
+    try {
+      const apiProducts = await fetchProductsFromAPI()
+      const normalizedProducts = apiProducts && apiProducts.length > 0 
+        ? normalizeProducts(apiProducts)
+        : []
+      setProducts(normalizedProducts)
+
+      const apiCategories = await fetchCategoriesFromAPI()
+      setCategories(apiCategories || [])
+    } catch (error) {
+      setProducts([])
+      setCategories([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
-    saveProducts(products)
-  }, [products])
+    fetchData()
+  }, [])
 
   /**
-   * Auto-persist categories to localStorage whenever they change
-   * Uses service layer for error handling
+   * Manually refresh products from API (call after adding/editing products)
    */
-  useEffect(() => {
-    saveCategories(categories)
-  }, [categories])
+  const refreshProducts = async () => {
+    await fetchData()
+  }
+
+  // ========================================================================
+  // PERSISTENCE - DISABLED
+  // ========================================================================
+  // Products and categories are NO LONGER saved to localStorage
+  // API is the single source of truth
+  
+  /*
+  // Removed localStorage persistence
+  // Products now come ONLY from API
+  */
 
   // ========================================================================
   // PRODUCT OPERATIONS (Original API - Backward Compatible)
@@ -102,7 +121,6 @@ export const ProductProvider = ({ children }) => {
     // Validate product
     const validation = validateProduct(normalizedProduct, categories)
     if (!validation.valid) {
-      console.error('❌ Product validation failed:', validation.errors)
       return { success: false, error: validation.errors.join(', ') }
     }
 
@@ -115,14 +133,12 @@ export const ProductProvider = ({ children }) => {
     setProducts((prev) => {
       // Check for duplicate ID
       if (prev.some((p) => String(p.id) === String(syncedProduct.id))) {
-        console.warn('⚠ Product with this ID already exists')
         return prev
       }
       
       return [...prev, syncedProduct]
     })
 
-    console.log('✅ Product added:', syncedProduct.id)
     return { success: true, product: syncedProduct }
   }
 
@@ -133,12 +149,10 @@ export const ProductProvider = ({ children }) => {
   const deleteProduct = (id) => {
     const product = getProductById(id, products)
     if (!product) {
-      console.warn('⚠ Product not found:', id)
       return { success: false, error: 'Product not found' }
     }
 
     setProducts(prev => prev.filter(product => product.id !== id))
-    console.log(`✅ Product deleted: ${id}`)
     return { success: true }
   }
 
@@ -151,7 +165,6 @@ export const ProductProvider = ({ children }) => {
     setProducts((prev) => {
       const index = prev.findIndex((p) => String(p.id) === String(id))
       if (index === -1) {
-        console.warn('⚠ Product not found for update:', id)
         return prev
       }
 
@@ -168,7 +181,6 @@ export const ProductProvider = ({ children }) => {
       // Validate updated product
       const validation = validateProduct(updatedProduct, categories)
       if (!validation.valid) {
-        console.error('❌ Product update validation failed:', validation.errors)
         return prev
       }
 
@@ -178,7 +190,6 @@ export const ProductProvider = ({ children }) => {
       const newProducts = [...prev]
       newProducts[index] = syncedProduct
       
-      console.log('✅ Product updated:', id)
       return newProducts
     })
 
@@ -198,7 +209,6 @@ export const ProductProvider = ({ children }) => {
    */
   const increaseStock = (productId, amount, size = null) => {
     if (amount <= 0) {
-      console.warn('⚠ Stock increase amount must be positive')
       return { success: false, error: 'Amount must be positive' }
     }
 
@@ -209,7 +219,6 @@ export const ProductProvider = ({ children }) => {
         // Update specific size stock
         const sizeIndex = currentProduct.sizes.findIndex(s => s.size === size)
         if (sizeIndex === -1) {
-          console.warn('⚠ Size not found:', size)
           return currentProduct
         }
         
@@ -246,7 +255,6 @@ export const ProductProvider = ({ children }) => {
    */
   const decreaseStock = (productId, amount, size = null) => {
     if (amount <= 0) {
-      console.warn('⚠ Stock decrease amount must be positive')
       return { success: false, error: 'Amount must be positive' }
     }
 
@@ -257,13 +265,11 @@ export const ProductProvider = ({ children }) => {
         // Update specific size stock
         const sizeIndex = currentProduct.sizes.findIndex(s => s.size === size)
         if (sizeIndex === -1) {
-          console.warn('⚠ Size not found:', size)
           return currentProduct
         }
         
         const currentSizeStock = currentProduct.sizes[sizeIndex].stock || 0
         if (currentSizeStock < amount) {
-          console.warn('⚠ Insufficient stock for size:', size)
           return currentProduct
         }
         
@@ -282,7 +288,6 @@ export const ProductProvider = ({ children }) => {
         // Update total stock only
         const currentStock = currentProduct.stock || 0
         if (currentStock < amount) {
-          console.warn('⚠ Insufficient stock:', currentStock, 'requested:', amount)
           return currentProduct
         }
 
@@ -291,9 +296,6 @@ export const ProductProvider = ({ children }) => {
         updatedProduct.inStock = newStock > 0
       }
 
-      if (isLowStock(updatedProduct)) {
-        console.warn(`⚠ Low stock alert for ${productId}: ${updatedProduct.stock} units remaining`)
-      }
 
       return updatedProduct
     })
@@ -333,13 +335,11 @@ export const ProductProvider = ({ children }) => {
    */
   const addCategory = (name) => {
     if (!name || name.trim() === '') {
-      console.warn('⚠ Category name is required')
       return { success: false, error: 'Category name is required' }
     }
 
     // Check for duplicate names
     if (categories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
-      console.warn('⚠ Category already exists:', name)
       return { success: false, error: 'Category already exists' }
     }
 
@@ -349,7 +349,6 @@ export const ProductProvider = ({ children }) => {
     }
 
     setCategories(prev => [...prev, newCategory])
-    console.log(`✅ Category added: ${newCategory.id} (${name})`)
     return { success: true, category: newCategory }
   }
 
@@ -361,16 +360,12 @@ export const ProductProvider = ({ children }) => {
   const deleteCategory = (categoryId) => {
     const category = getCategoryById(categoryId, categories)
     if (!category) {
-      console.warn('⚠ Category not found:', categoryId)
       return { success: false, error: 'Category not found' }
     }
 
     // Check if any products exist in this category
     const productsInCategory = getProductsByCategory(categoryId, products)
     if (productsInCategory.length > 0) {
-      console.warn(
-        `⚠ Cannot delete category "${category.name}": ${productsInCategory.length} product(s) still assigned`
-      )
       return {
         success: false,
         error: `Cannot delete category with ${productsInCategory.length} product(s)`
@@ -378,7 +373,6 @@ export const ProductProvider = ({ children }) => {
     }
 
     setCategories(prev => prev.filter(c => c.id !== categoryId))
-    console.log(`✅ Category deleted: ${categoryId}`)
     return { success: true }
   }
 
@@ -389,13 +383,11 @@ export const ProductProvider = ({ children }) => {
    */
   const updateCategory = (categoryId, newName) => {
     if (!newName || newName.trim() === '') {
-      console.warn('⚠ Category name is required')
       return { success: false, error: 'Category name is required' }
     }
 
     const category = getCategoryById(categoryId, categories)
     if (!category) {
-      console.warn('⚠ Category not found:', categoryId)
       return { success: false, error: 'Category not found' }
     }
 
@@ -407,7 +399,6 @@ export const ProductProvider = ({ children }) => {
           c.name.toLowerCase() === newName.toLowerCase()
       )
     ) {
-      console.warn('⚠ Category name already exists:', newName)
       return { success: false, error: 'Category name already exists' }
     }
 
@@ -416,7 +407,6 @@ export const ProductProvider = ({ children }) => {
         c.id === categoryId ? { ...c, name: newName.trim() } : c
       )
     )
-    console.log(`✅ Category updated: ${categoryId} (${newName})`)
     return { success: true, category: { id: categoryId, name: newName } }
   }
 
@@ -451,6 +441,7 @@ export const ProductProvider = ({ children }) => {
     addProduct,
     deleteProduct,
     updateProduct,
+    loading,
 
     // New: Categories management
     categories,
@@ -470,6 +461,9 @@ export const ProductProvider = ({ children }) => {
 
     // Helpers
     getProductById: (id) => getProductById(id, products),
+
+    // Refresh from API
+    refreshProducts,
   }
 
   return (

@@ -1,6 +1,6 @@
 import React from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
-import { CheckCircleIcon } from '@heroicons/react/24/outline'
+import { useLocation, useNavigate, Link } from 'react-router-dom'
+import { CheckCircleIcon, ShoppingBagIcon, UserCircleIcon } from '@heroicons/react/24/outline'
 
 export default function OrderSuccess() {
   const location = useLocation()
@@ -8,44 +8,47 @@ export default function OrderSuccess() {
   const orderId = location.state?.orderId
 
   return (
-    <div className="bg-white min-h-screen flex items-center justify-center">
-      <div className="text-center max-w-md mx-auto px-4">
-        <CheckCircleIcon className="h-24 w-24 text-green-500 mx-auto mb-6" />
-        
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          Order Placed Successfully!
-        </h1>
-        
-        <p className="text-lg text-gray-600 mb-6">
-          Thank you for your purchase. Your order has been confirmed.
-        </p>
-        
-        {orderId && (
-          <div className="bg-gray-50 p-4 rounded-lg mb-6">
-            <p className="text-sm text-gray-600 mb-1">Order ID</p>
-            <p className="font-mono font-semibold text-lg">{orderId}</p>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-2xl shadow-xl border border-green-100 p-10 text-center">
+
+          {/* Animated check */}
+          <div className="inline-flex items-center justify-center w-24 h-24 bg-green-100 rounded-full mb-6">
+            <CheckCircleIcon className="h-14 w-14 text-green-600" />
           </div>
-        )}
-        
-        <div className="space-y-3">
-          <button
-            onClick={() => navigate('/shop')}
-            className="w-full bg-[#ae0b0b] text-white py-3 rounded-md hover:bg-[#8a0909] transition-colors"
-          >
-            Continue Shopping
-          </button>
-          
-          <button
-            onClick={() => navigate('/account')}
-            className="w-full border border-gray-300 text-gray-700 py-3 rounded-md hover:bg-gray-50 transition-colors"
-          >
-            View My Orders
-          </button>
-        </div>
-        
-        <div className="mt-8 text-sm text-gray-500">
-          <p>A confirmation email has been sent to your registered email address.</p>
-          <p className="mt-2">For any queries, contact our customer support.</p>
+
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Order Placed!</h1>
+          <p className="text-gray-500 text-sm mb-6">
+            Thank you for shopping with KKings Jewellery. Your order has been confirmed.
+          </p>
+
+          {orderId && (
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Order ID</p>
+              <p className="font-mono font-bold text-gray-900 text-sm">{String(orderId).slice(-12) || orderId}</p>
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <Link
+              to="/shop"
+              className="flex items-center justify-center gap-2 w-full py-3.5 bg-[#ae0b0b] text-white font-bold rounded-xl hover:bg-[#8f0a0a] transition-colors shadow-lg shadow-[#ae0b0b]/20"
+            >
+              <ShoppingBagIcon className="h-5 w-5" />
+              Continue Shopping
+            </Link>
+            <Link
+              to="/account"
+              className="flex items-center justify-center gap-2 w-full py-3.5 border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              <UserCircleIcon className="h-5 w-5" />
+              My Account
+            </Link>
+          </div>
+
+          <p className="mt-6 text-xs text-gray-400">
+            A confirmation email will be sent to your registered address.
+          </p>
         </div>
       </div>
     </div>

@@ -3,12 +3,22 @@
 import React, { useState } from 'react'
 import { useOrder } from '../context/OrderContext'
 import AdminCard from '../layout/AdminCard'
+import StatusBadge from '../components/StatusBadge'
+import StatCard from '../components/StatCard'
 import {
 formatOrderDate,
 formatOrderTime,
 getStatusColor,
 formatPrice,
 } from '../utils/orderValidation'
+import { 
+  ShoppingBagIcon, 
+  ClipboardDocumentListIcon,
+  TruckIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  FunnelIcon
+} from '@heroicons/react/24/outline'
 
 const AdminOrders = () => {
   const { orders, updateOrderStatus, getStats } = useOrder()
@@ -37,58 +47,64 @@ const AdminOrders = () => {
     : null
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Orders</h1>
-        <p className="text-gray-600 mt-2">
-          Manage and track all customer orders
+        <p className="text-gray-500 mt-2">
+          Manage and track all customer orders ({orders.length} total)
         </p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-        <AdminCard>
-          <div className="text-center">
-            <p className="text-gray-600 text-sm">Total Orders</p>
-            <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
-          </div>
-        </AdminCard>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <StatCard
+          title="Total"
+          value={stats.total}
+          icon={ShoppingBagIcon}
+          iconColor="text-gray-600"
+          iconBg="bg-gray-50"
+        />
 
-        <AdminCard>
-          <div className="text-center">
-            <p className="text-gray-600 text-sm">Pending</p>
-            <p className="text-3xl font-bold text-yellow-600">{stats.pending}</p>
-          </div>
-        </AdminCard>
+        <StatCard
+          title="Pending"
+          value={stats.pending}
+          icon={ClipboardDocumentListIcon}
+          iconColor="text-yellow-600"
+          iconBg="bg-yellow-50"
+        />
 
-        <AdminCard>
-          <div className="text-center">
-            <p className="text-gray-600 text-sm">Processing</p>
-            <p className="text-3xl font-bold text-blue-600">{stats.processing}</p>
-          </div>
-        </AdminCard>
+        <StatCard
+          title="Processing"
+          value={stats.processing}
+          icon={ShoppingBagIcon}
+          iconColor="text-blue-600"
+          iconBg="bg-blue-50"
+        />
 
-        <AdminCard>
-          <div className="text-center">
-            <p className="text-gray-600 text-sm">Shipped</p>
-            <p className="text-3xl font-bold text-purple-600">{stats.shipped}</p>
-          </div>
-        </AdminCard>
+        <StatCard
+          title="Shipped"
+          value={stats.shipped}
+          icon={TruckIcon}
+          iconColor="text-purple-600"
+          iconBg="bg-purple-50"
+        />
 
-        <AdminCard>
-          <div className="text-center">
-            <p className="text-gray-600 text-sm">Delivered</p>
-            <p className="text-3xl font-bold text-green-600">{stats.delivered}</p>
-          </div>
-        </AdminCard>
+        <StatCard
+          title="Delivered"
+          value={stats.delivered}
+          icon={CheckCircleIcon}
+          iconColor="text-green-600"
+          iconBg="bg-green-50"
+        />
 
-        <AdminCard>
-          <div className="text-center">
-            <p className="text-gray-600 text-sm">Cancelled</p>
-            <p className="text-3xl font-bold text-red-600">{stats.cancelled}</p>
-          </div>
-        </AdminCard>
+        <StatCard
+          title="Cancelled"
+          value={stats.cancelled}
+          icon={XCircleIcon}
+          iconColor="text-red-600"
+          iconBg="bg-red-50"
+        />
       </div>
 
       {/* Error */}
@@ -100,26 +116,30 @@ const AdminOrders = () => {
 
       {/* Filters */}
       <AdminCard>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex items-center gap-2 mb-4">
+          <FunnelIcon className="h-5 w-5 text-gray-500" />
+          <h3 className="font-semibold text-gray-900">Filter by Status</h3>
+        </div>
+        <div className="flex flex-wrap gap-3">
           <button
             onClick={() => setSelectedStatus('all')}
-            className={`px-4 py-2 rounded-lg font-medium ${
+            className={`px-5 py-2.5 rounded-xl font-semibold transition-all ${
               selectedStatus === 'all'
-                ? 'bg-[#ae0b0b] text-white'
-                : 'bg-gray-100'
+                ? 'bg-[#ae0b0b] text-white shadow-md'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            All Orders
+            All Orders ({orders.length})
           </button>
 
           {['pending', 'processing', 'shipped', 'delivered', 'cancelled'].map(status => (
             <button
               key={status}
               onClick={() => setSelectedStatus(status)}
-              className={`px-4 py-2 rounded-lg font-medium capitalize ${
+              className={`px-5 py-2.5 rounded-xl font-semibold capitalize transition-all ${
                 selectedStatus === status
-                  ? 'bg-[#ae0b0b] text-white'
-                  : 'bg-gray-100'
+                  ? 'bg-[#ae0b0b] text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               {status} ({orders.filter(o => o.status === status).length})
@@ -129,69 +149,118 @@ const AdminOrders = () => {
       </AdminCard>
 
       {/* Table */}
-      <AdminCard>
+      <AdminCard padding="p-0">
         {filteredOrders.length === 0 ? (
-          <div className="text-center py-12">No orders found</div>
+          <div className="text-center py-16">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+              <ClipboardDocumentListIcon className="h-8 w-8 text-gray-400" />
+            </div>
+            <p className="text-gray-500 font-medium">No orders found</p>
+            <p className="text-sm text-gray-400 mt-1">Orders will appear here once customers place them</p>
+          </div>
         ) : (
-          <table className="w-full text-sm">
-            <tbody>
-              {filteredOrders.map(order => (
-                <tr key={order._id} className="border-b">
-                  <td className="p-3">{order._id}</td>
-
-                  <td className="p-3">
-                    {order.shippingAddress?.firstName}
-                  </td>
-
-                  <td className="p-3">
-                    {formatOrderDate(order.createdAt)}
-                  </td>
-
-                  <td className="p-3 text-right">
-                    {formatPrice(order.totalAmount || order.totals?.total || 0)}
-                  </td>
-
-                  <td className="p-3 text-center">
-                    <span className={getStatusColor(order.status)}>
-                      {order.status}
-                    </span>
-                  </td>
-
-                  <td className="p-3 text-center">
-                    <button
-                      onClick={() =>
-                        setSelectedOrderId(
-                          selectedOrderId === order._id ? null : order._id
-                        )
-                      }
-                    >
-                      View
-                    </button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b-2 border-gray-200">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Order ID</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Customer</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {filteredOrders.map(order => (
+                  <tr key={order._id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <span className="font-mono text-sm text-gray-600">#{String(order._id || 'N/A').slice(-8)}</span>
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <div>
+                        <p className="font-semibold text-gray-900">
+                          {order.shippingAddress?.firstName} {order.shippingAddress?.lastName}
+                        </p>
+                        <p className="text-sm text-gray-500">{order.shippingAddress?.email}</p>
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{formatOrderDate(order.createdAt)}</p>
+                        <p className="text-xs text-gray-500">{formatOrderTime(order.createdAt)}</p>
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4 text-right">
+                      <span className="font-semibold text-gray-900">
+                        {formatPrice(order.totalAmount || order.totals?.total || 0)}
+                      </span>
+                    </td>
+
+                    <td className="px-6 py-4 text-center">
+                      <StatusBadge status={order.status} />
+                    </td>
+
+                    <td className="px-6 py-4 text-center">
+                      <button
+                        onClick={() => setSelectedOrderId(selectedOrderId === order._id ? null : order._id)}
+                        className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors"
+                      >
+                        {selectedOrderId === order._id ? 'Hide' : 'View'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </AdminCard>
 
       {/* Details */}
       {selectedOrder && (
         <AdminCard>
-          <h3 className="font-bold mb-4">{selectedOrder._id}</h3>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-gray-900">Order Details</h3>
+            <span className="font-mono text-sm text-gray-500">#{selectedOrder._id}</span>
+          </div>
 
-          <div className="space-y-2">
-            <p>Status: {selectedOrder.status}</p>
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <h4 className="text-sm font-semibold text-gray-600 uppercase mb-2">Customer Information</h4>
+              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                <p className="text-sm"><span className="font-medium">Name:</span> {selectedOrder.shippingAddress?.firstName} {selectedOrder.shippingAddress?.lastName}</p>
+                <p className="text-sm"><span className="font-medium">Email:</span> {selectedOrder.shippingAddress?.email}</p>
+                <p className="text-sm"><span className="font-medium">Phone:</span> {selectedOrder.shippingAddress?.mobile}</p>
+              </div>
+            </div>
 
-            <div className="flex gap-2">
-              {['pending','processing','shipped','delivered','cancelled'].map(status => (
-                <button
-                  key={status}
-                  onClick={() => handleStatusChange(selectedOrder._id, status)}
-                >
-                  {status}
-                </button>
-              ))}
+            <div>
+              <h4 className="text-sm font-semibold text-gray-600 uppercase mb-2">Order Status</h4>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="mb-3">
+                  <p className="text-sm text-gray-600 mb-2">Current Status:</p>
+                  <StatusBadge status={selectedOrder.status} size="lg" />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {['pending','processing','shipped','delivered','cancelled'].map(status => (
+                    <button
+                      key={status}
+                      onClick={() => handleStatusChange(selectedOrder._id, status)}
+                      className={`px-4 py-2 rounded-lg text-sm font-semibold capitalize transition-all ${
+                        selectedOrder.status === status
+                          ? 'bg-[#ae0b0b] text-white'
+                          : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-[#ae0b0b]'
+                      }`}
+                    >
+                      {status}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </AdminCard>

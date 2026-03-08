@@ -3,26 +3,30 @@
 import { useState, useEffect } from 'react'
 import AdminCard from './AdminCard'
 import AdminButton from './AdminButton'
+import { API_BASE_URL } from '../../config/api'
 
-const API_URL = "http://localhost:5000/api/content/home"
+const API_URL = `${API_BASE_URL}/content/home`
 
 export default function HomePageEditor() {
   const [content, setContent] = useState(null)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
 
-  // 🔥 FETCH FROM BACKEND
+  const DEFAULT_HOME = {
+    announcement: 'Get 10% off on First Purchase',
+  }
+
   useEffect(() => {
     const fetchContent = async () => {
       try {
         const res = await fetch(API_URL)
-        const data = await res.json()
-        setContent(data)
-      } catch (error) {
-        console.error(error)
+        const json = await res.json()
+        const saved = json?.data?.data
+        setContent(saved && typeof saved === 'object' ? { ...DEFAULT_HOME, ...saved } : DEFAULT_HOME)
+      } catch {
+        setContent(DEFAULT_HOME)
       }
     }
-
     fetchContent()
   }, [])
 
@@ -50,16 +54,11 @@ export default function HomePageEditor() {
 
     try {
       const token = localStorage.getItem('kk_admin_token')
-
       const res = await fetch(API_URL, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`, // 🔐 admin protected
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(content),
       })
-
       if (res.ok) {
         setMessage('✅ Homepage content saved successfully!')
       } else {

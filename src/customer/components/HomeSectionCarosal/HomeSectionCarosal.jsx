@@ -4,60 +4,60 @@ import React, { useRef, useState, useCallback } from 'react'
 import AliceCarousel from 'react-alice-carousel'
 import HomeSectionCard from '../HomeSectionCard/HomeSectionCard'
 import { Link } from 'react-router-dom'
-import { Button } from '@mui/material'
-import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft'
-import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight'
-import { chains } from '../../data/chains'
-import { bracelets } from '../../data/bracelet'
-import { rings } from '../../data/rings'
-import { kada } from '../../data/kada'
-import { bali } from '../../data/bali'
-import { pendals } from '../../data/pendals'
-import { rudraksh } from '../../data/rudraksh'
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/solid'
 
-const HomeSectionCarousel = ({ sectionName }) => {
+const HomeSectionCarousel = ({ sectionName, data = [] }) => {
   const [activeIndex, setActiveIndex] = useState(0)
   const carouselRef = useRef(null)
 
+  const count = Math.min((data || []).length, 10)
+
   const responsive = {
-    0: { items: 2 },
-    640: { items: 3 },
-    1024: { items: 4 },
+    0: { items: Math.min(2, count) },
+    640: { items: Math.min(3, count) },
+    1024: { items: Math.min(4, count) },
   }
 
   // ================= DATA =================
-  const allProducts = [...chains, ...bracelets, ...rings, ...kada, ...bali, ...pendals, ...rudraksh]
-  
-  const baseProducts =
-    sectionName?.toLowerCase() === 'bracelets'
-      ? bracelets.slice(0, 10)
-      : sectionName?.toLowerCase() === 'chains'
-      ? chains.slice(0, 10)
-      : sectionName?.toLowerCase() === 'rings'
-      ? rings.slice(0, 10)
-      : sectionName?.toLowerCase() === 'kada'
-      ? kada.slice(0, 10)
-      : sectionName?.toLowerCase() === 'bali'
-      ? bali.slice(0, 10)
-      : sectionName?.toLowerCase() === 'pendals'
-      ? pendals.slice(0, 10)
-      : sectionName?.toLowerCase() === 'rudraksh'
-      ? rudraksh.slice(0, 10)
-      : allProducts.slice(0, 10)
-
-  const products = baseProducts.map((product, index) => ({
+  // Products now come from props (API data), not hardcoded arrays
+  const products = (data || []).slice(0, 10).map((product, index) => ({
     ...product,
     isBestSeller: index === 1 || index === 4,
     isOnSale: index === 2 || index === 6,
   }))
 
+  // Don't render if no products
+  if (!products || products.length === 0) return null
+
   const items = products.map((item, index) => (
     <div key={index} className="px-3 lg:px-4">
-      <Link to={`/product/${item.id}`}> 
+      <Link to={`/product/${item.id}`}>
         <HomeSectionCard product={item} />
       </Link>
     </div>
   ))
+
+  // Grid layout for small counts (avoids AliceCarousel stretch)
+  if (products.length <= 3) {
+    return (
+      <section className="relative w-full px-4 sm:px-6 lg:px-14 py-12 lg:py-16 bg-gradient-to-b from-[#ffffff] via-[#fffaf3] to-[#fdf6ec]">
+        <div className="mb-8 lg:mb-12 flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl lg:text-3xl font-semibold tracking-wide text-[#ae0b0b]">{sectionName}</h2>
+            <span className="mt-3 block h-1 w-16 rounded-full bg-gradient-to-r from-[#b91c1c] to-[#d4af37]" />
+          </div>
+          <Link to={`/shop/${String(sectionName).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '')}`} className="text-sm font-medium text-[#ae0b0b] hidden sm:inline-flex">Explore →</Link>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 lg:gap-6">
+          {products.map((item, index) => (
+            <Link key={index} to={`/product/${item.id}`}>
+              <HomeSectionCard product={item} />
+            </Link>
+          ))}
+        </div>
+      </section>
+    )
+  }
 
   // ================= HANDLERS =================
   const handleNext = useCallback(() => {
@@ -125,50 +125,22 @@ const HomeSectionCarousel = ({ sectionName }) => {
         />
 
         {/* NEXT */}
-        <Button
+        <button
           onClick={handleNext}
           aria-label="Next products"
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            right: '-2.5rem',
-            transform: 'translateY(-50%)',
-            minWidth: 48,
-            width: 48,
-            height: 48,
-            borderRadius: '50%',
-            backgroundColor: 'rgba(255,250,240,0.95)',
-            backdropFilter: 'blur(8px)',
-            boxShadow: '0 12px 28px rgba(180,140,90,0.25)',
-            color: '#7a2e2e',
-            '&:hover': { backgroundColor: '#b91c1c', color: '#fff' },
-          }}
+          className="absolute top-1/2 -right-4 lg:-right-5 -translate-y-1/2 w-10 h-10 rounded-full bg-white/95 backdrop-blur-sm shadow-lg border border-[#e7d6a7] text-[#7a2e2e] flex items-center justify-center hover:bg-[#b91c1c] hover:text-white hover:border-transparent transition-all duration-200 z-10"
         >
-          <KeyboardArrowRightIcon />
-        </Button>
+          <ChevronRightIcon className="h-5 w-5" />
+        </button>
 
         {/* PREV */}
-        <Button
+        <button
           onClick={handlePrev}
           aria-label="Previous products"
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '-2.5rem',
-            transform: 'translateY(-50%)',
-            minWidth: 48,
-            width: 48,
-            height: 48,
-            borderRadius: '50%',
-            backgroundColor: 'rgba(255,250,240,0.95)',
-            backdropFilter: 'blur(8px)',
-            boxShadow: '0 12px 28px rgba(180,140,90,0.25)',
-            color: '#7a2e2e',
-            '&:hover': { backgroundColor: '#b91c1c', color: '#fff' },
-          }}
+          className="absolute top-1/2 -left-4 lg:-left-5 -translate-y-1/2 w-10 h-10 rounded-full bg-white/95 backdrop-blur-sm shadow-lg border border-[#e7d6a7] text-[#7a2e2e] flex items-center justify-center hover:bg-[#b91c1c] hover:text-white hover:border-transparent transition-all duration-200 z-10"
         >
-          <KeyboardArrowLeftIcon />
-        </Button>
+          <ChevronLeftIcon className="h-5 w-5" />
+        </button>
       </div>
     </section>
   )

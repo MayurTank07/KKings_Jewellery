@@ -16,19 +16,20 @@ const AdminButton = forwardRef(({
   icon: Icon,
   ...props 
 }, ref) => {
-  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2'
+  const baseClasses = 'inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed'
   
   const variants = {
-    primary: 'bg-[#ae0b0b] hover:opacity-90 text-white focus:ring-[#ae0b0b]',
-    secondary: 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-[#ae0b0b]',
-    danger: 'bg-[#b91c1c] hover:opacity-90 text-white focus:ring-[#b91c1c]',
-    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-[#ae0b0b]',
+    primary: 'bg-[#ae0b0b] hover:bg-[#8f0a0a] text-white shadow-md hover:shadow-lg focus:ring-[#ae0b0b]',
+    secondary: 'bg-white border-2 border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 focus:ring-[#ae0b0b] shadow-sm',
+    danger: 'bg-red-600 hover:bg-red-700 text-white shadow-md hover:shadow-lg focus:ring-red-600',
+    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-gray-300',
+    success: 'bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg focus:ring-green-600',
   }
   
   const sizes = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-sm',
-    lg: 'px-6 py-3 text-base',
+    sm: 'px-3 py-2 text-xs',
+    md: 'px-5 py-2.5 text-sm',
+    lg: 'px-8 py-3 text-base',
   }
   
   const disabledClasses = disabled || loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'

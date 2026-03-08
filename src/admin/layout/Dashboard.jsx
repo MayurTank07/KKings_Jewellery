@@ -2,7 +2,7 @@
 
 import { useProduct } from '../../customer/context/ProductContext'
 import { useCart } from '../../customer/context/useCart'
-import { useOrder } from '../../customer/context/useOrder' // ✅ FIXED PATH
+import { useOrder } from '../context/OrderContext'
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 
@@ -12,16 +12,19 @@ import {
   UsersIcon,
   ArrowTrendingUpIcon,
   PlusCircleIcon,
-  EyeIcon,
+  ChartBarIcon,
+  ClipboardDocumentListIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
 
 import AdminCard from './AdminCard'
 import AdminButton from './AdminButton'
+import StatCard from '../components/StatCard'
 
 import {
   calculateTotalStats,
   getRevenueStats,
-} from '../utils/analyticsService'
+} from '../utils/analyticsUtils'
 
 export default function Dashboard() {
   const { products } = useProduct()
@@ -49,162 +52,185 @@ export default function Dashboard() {
     return `₹${(amount || 0).toLocaleString('en-IN')}`
   }
 
-  const stats = [
-    {
-      name: 'Total Products',
-      value: totalProducts,
-      change: '+0%',
-      changeType: 'increase',
-      icon: ShoppingBagIcon,
-      href: '/admin/products',
-    },
-    {
-      name: 'Total Revenue',
-      value: formatCurrency(totalRevenue),
-      change: `${revenueStats.revenueGrowth > 0 ? '+' : ''}${revenueStats.revenueGrowth || 0}%`,
-      changeType: revenueStats.revenueGrowth > 0 ? 'increase' : 'decrease',
-      icon: CurrencyDollarIcon,
-      href: '/admin/analytics',
-    },
-    {
-      name: 'Pending Orders',
-      value: pendingOrders,
-      change: pendingOrders > 0 ? '⚠' : '✓',
-      changeType: pendingOrders > 0 ? 'decrease' : 'increase',
-      icon: UsersIcon,
-      href: '/admin/orders',
-    },
-    {
-      name: 'Low Stock',
-      value: lowStockProducts,
-      change: lowStockProducts > 0 ? '⚠' : '✓',
-      changeType: lowStockProducts > 0 ? 'decrease' : 'increase',
-      icon: ArrowTrendingUpIcon,
-      href: '/admin/products?filter=low-stock',
-    },
-  ]
-
   const recentProducts = products.slice(-5).reverse()
 
   return (
-    <div className="space-y-8">
+    <div className="p-6 space-y-8">
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-1">
-          Welcome back! Here’s what’s happening with your store.
+        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-gray-500 mt-2">
+          Welcome back! Here's what's happening with your store.
         </p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map(stat => {
-          const Icon = stat.icon
+        <Link to="/admin/products">
+          <StatCard
+            title="Total Products"
+            value={totalProducts}
+            change="+0%"
+            changeType="increase"
+            icon={ShoppingBagIcon}
+            iconColor="text-blue-600"
+            iconBg="bg-blue-50"
+          />
+        </Link>
 
-          return (
-            <AdminCard key={stat.name} hover>
-              <Link to={stat.href} className="group block">
-                <div className="flex justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">{stat.name}</p>
-                    <p className="text-2xl font-semibold mt-1">
-                      {stat.value}
-                    </p>
+        <Link to="/admin/analytics">
+          <StatCard
+            title="Total Revenue"
+            value={formatCurrency(totalRevenue)}
+            change={`${revenueStats.revenueGrowth > 0 ? '+' : ''}${revenueStats.revenueGrowth || 0}%`}
+            changeType={revenueStats.revenueGrowth > 0 ? 'increase' : 'decrease'}
+            icon={CurrencyDollarIcon}
+            iconColor="text-[#ae0b0b]"
+            iconBg="bg-red-50"
+          />
+        </Link>
 
-                    <div className="flex items-center mt-2">
-                      <ArrowTrendingUpIcon
-                        className={`h-4 w-4 ${
-                          stat.changeType === 'increase'
-                            ? 'text-green-600'
-                            : 'text-red-600'
-                        }`}
-                      />
-                      <span
-                        className={`ml-1 text-sm font-medium ${
-                          stat.changeType === 'increase'
-                            ? 'text-green-600'
-                            : 'text-red-600'
-                        }`}
-                      >
-                        {stat.change}
-                      </span>
-                      <span className="ml-1 text-sm text-gray-500">
-                        vs last month
-                      </span>
-                    </div>
-                  </div>
+        <Link to="/admin/orders">
+          <StatCard
+            title="Pending Orders"
+            value={pendingOrders}
+            change={pendingOrders > 0 ? 'Needs attention' : 'All clear'}
+            changeType={pendingOrders > 0 ? 'decrease' : 'increase'}
+            icon={ClipboardDocumentListIcon}
+            iconColor="text-purple-600"
+            iconBg="bg-purple-50"
+          />
+        </Link>
 
-                  <div className="p-3 bg-[#fef2f2] rounded-xl group-hover:bg-[#ae0b0b] transition">
-                    <Icon className="h-6 w-6 text-[#ae0b0b] group-hover:text-white transition" />
-                  </div>
-                </div>
-              </Link>
-            </AdminCard>
-          )
-        })}
+        <Link to="/admin/products">
+          <StatCard
+            title="Low Stock Alert"
+            value={lowStockProducts}
+            change={lowStockProducts > 0 ? 'Action required' : 'All good'}
+            changeType={lowStockProducts > 0 ? 'decrease' : 'increase'}
+            icon={ExclamationTriangleIcon}
+            iconColor="text-orange-600"
+            iconBg="bg-orange-50"
+          />
+        </Link>
       </div>
 
       {/* Quick Actions */}
       <AdminCard>
-        <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Actions</h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-
-          <AdminButton href="/admin/upload" variant="secondary" className="p-4">
-            <PlusCircleIcon className="h-5 w-5 mr-2 text-[#ae0b0b]" />
-            Add Product
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <AdminButton 
+            href="/admin/upload" 
+            variant="primary" 
+            icon={PlusCircleIcon}
+            className="justify-start text-left h-14"
+          >
+            Add New Product
           </AdminButton>
 
-          <AdminButton href="/admin/products" variant="secondary" className="p-4">
-            <EyeIcon className="h-5 w-5 mr-2 text-[#ae0b0b]" />
-            View Products
+          <AdminButton 
+            href="/admin/products" 
+            variant="secondary" 
+            icon={ShoppingBagIcon}
+            className="justify-start text-left h-14"
+          >
+            Manage Products
           </AdminButton>
 
-          <AdminButton href="/admin/analytics" variant="secondary" className="p-4">
-            <ArrowTrendingUpIcon className="h-5 w-5 mr-2 text-[#ae0b0b]" />
-            Analytics
+          <AdminButton 
+            href="/admin/analytics" 
+            variant="secondary" 
+            icon={ChartBarIcon}
+            className="justify-start text-left h-14"
+          >
+            View Analytics
           </AdminButton>
-
         </div>
       </AdminCard>
 
       {/* Recent Products */}
       <AdminCard>
-        <div className="flex justify-between mb-4">
-          <h2 className="text-lg font-semibold">Recent Products</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-gray-900">Recent Products</h2>
+          <Link to="/admin/products" className="text-sm font-semibold text-[#ae0b0b] hover:text-[#8f0a0a]">
+            View all →
+          </Link>
         </div>
 
         {recentProducts.length === 0 ? (
-          <div className="text-center py-12">
-            <ShoppingBagIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p>No products yet</p>
+          <div className="text-center py-16">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+              <ShoppingBagIcon className="h-8 w-8 text-gray-400" />
+            </div>
+            <p className="text-gray-500 font-medium">No products yet</p>
+            <AdminButton href="/admin/upload" className="mt-4" size="sm">
+              Add your first product
+            </AdminButton>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y">
-              <tbody className="divide-y">
+          <div className="overflow-x-auto -mx-6">
+            <table className="min-w-full">
+              <thead className="bg-gray-50 border-y border-gray-200">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Product
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Category
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Price
+                  </th>
+                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Stock
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
                 {recentProducts.map(product => (
-                  <tr key={product._id || product.id} className="hover:bg-[#fef2f2]">
-                    <td className="px-6 py-4 flex items-center gap-3">
-                      {product.images?.[0] && (
-                        <img
-                          src={product.images[0]}
-                          className="h-10 w-10 rounded-lg object-cover"
-                        />
-                      )}
-                      <div>
-                        <p className="font-medium">{product.title || product.name}</p>
-                        <p className="text-xs text-gray-600">{product.category}</p>
+                  <tr key={product._id || product.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        {product.images?.[0] ? (
+                          <img
+                            src={product.images[0]}
+                            alt={product.title || product.name}
+                            className="h-12 w-12 rounded-lg object-cover border border-gray-200"
+                          />
+                        ) : (
+                          <div className="h-12 w-12 rounded-lg bg-gray-100 flex items-center justify-center">
+                            <ShoppingBagIcon className="h-6 w-6 text-gray-400" />
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-semibold text-gray-900">{product.title || product.name}</p>
+                          <p className="text-sm text-gray-500">ID: {String(product._id || product.id || 'N/A').slice(-6)}</p>
+                        </div>
                       </div>
                     </td>
 
                     <td className="px-6 py-4">
-                      ₹{(product.price || 0).toLocaleString()}
+                      <span className="inline-flex px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded-full">
+                        {product.category}
+                      </span>
                     </td>
 
-                    <td className="px-6 py-4">
-                      {product.sizes?.reduce((a, s) => a + s.stock, 0) ?? 'N/A'}
+                    <td className="px-6 py-4 text-right">
+                      <span className="font-semibold text-gray-900">
+                        ₹{(product.price || 0).toLocaleString('en-IN')}
+                      </span>
+                    </td>
+
+                    <td className="px-6 py-4 text-center">
+                      <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
+                        (product.sizes?.reduce((a, s) => a + s.stock, 0) || 0) <= 5
+                          ? 'bg-red-50 text-red-700'
+                          : 'bg-green-50 text-green-700'
+                      }`}>
+                        {product.sizes?.reduce((a, s) => a + s.stock, 0) ?? 'N/A'}
+                      </span>
                     </td>
                   </tr>
                 ))}

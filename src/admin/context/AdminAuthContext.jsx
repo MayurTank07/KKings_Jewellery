@@ -1,12 +1,14 @@
 
 import React, { useState, useEffect } from 'react'
 import { AdminAuthContext } from './AdminAuthContextObject'
+import { API_BASE_URL } from '../../config/api'
 
-const API_URL = "http://localhost:5000/api/admin"
+const API_URL = `${API_BASE_URL}/admin`
 
 export function AdminAuthProvider({ children }) {
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false)
   const [adminLoading, setAdminLoading] = useState(true)
+  const [orderRefreshCallback, setOrderRefreshCallback] = useState(null)
 
   // Production-ready: verify token on mount and on storage change
   useEffect(() => {
@@ -68,7 +70,10 @@ export function AdminAuthProvider({ children }) {
       setIsAdminAuthenticated(true);
       setAdminLoading(false);
 
-      console.log('✅ Admin login successful');
+      // Trigger order refresh if callback is set
+      if (orderRefreshCallback) {
+        orderRefreshCallback();
+      }
 
       return { success: true };
 
@@ -116,6 +121,7 @@ export function AdminAuthProvider({ children }) {
         loginAdmin,
         logoutAdmin,
         verifyAdminToken,
+        setOrderRefreshCallback,
       }}
     >
       {children}

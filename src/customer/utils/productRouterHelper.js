@@ -1,30 +1,14 @@
 /**
- * Product Router Helper
- * ===================
- * Ensures safe product ID routing and validation
- * Prevents broken links and undefined product errors
+ * Product Router Helper - DEPRECATED
+ * ===================================
+ * This file is no longer used as products now come from API
+ * Use ProductContext instead
+ * 
+ * @deprecated Use ProductContext.getProductById() instead
  */
 
-import { 
-  bracelets 
-} from '../data/bracelet'
-import { chains as chainsData } from '../data/chains'
-import { rings as ringsData } from '../data/rings'
-import { pendals as pendalsData } from '../data/pendals'
-import { bali as baliData } from '../data/bali'
-import { kada as kadaData } from '../data/kada'
-import { rudraksh as rudrakshData } from '../data/rudraksh'
-
-// All products combined for ID lookup
-const allProducts = [
-  ...bracelets, 
-  ...chainsData, 
-  ...ringsData, 
-  ...pendalsData, 
-  ...baliData, 
-  ...kadaData, 
-  ...rudrakshData
-]
+// No hardcoded products - all data comes from API
+const allProducts = []
 
 /**
  * Get product by ID with safe fallback

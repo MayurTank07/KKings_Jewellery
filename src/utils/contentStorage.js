@@ -73,7 +73,7 @@ export const DEFAULT_CONTENT = {
       whatsapp: 'https://wa.me/+918329972432',
     },
 
-    copyright: '© {year} KKingsJewellery. All rights reserved. | Designed with ❤️',
+    copyright: '© {year} KKingsJewellery. All rights reserved. | Designed by StarX Innovations and IT Solutions',
   },
 
   ourStory: {

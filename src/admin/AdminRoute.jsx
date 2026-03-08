@@ -41,7 +41,6 @@ export function AdminRoute({ children }) {
    * ❌ Not Authenticated → Redirect
    */
   if (!isAdminAuthenticated) {
-    console.warn('⚠ Unauthorized admin access → redirecting to login')
     return <Navigate to="/admin-login" replace />
   }
 

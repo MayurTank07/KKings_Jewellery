@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
+import { API_BASE_URL } from '../../config/api';
 
-const API_URL = "http://localhost:5000/api/content";
+const API_URL = `${API_BASE_URL}/content`;
 
 export function useCMSContent(pageKey) {
   const [content, setContent] = useState(null);

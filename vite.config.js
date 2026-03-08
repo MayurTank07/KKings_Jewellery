@@ -3,6 +3,10 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'jsdom',
+  },
   plugins: [
     react({
       // Removes dev-only helpers in production

@@ -18,7 +18,7 @@ export const normalizeProduct = (product) => {
   // Base normalized product
   const normalized = {
     // ID handling
-    id: product.id || `product-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    id: product.id || product._id?.toString() || `product-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     
     // Name/title handling - prefer title for frontend, name for admin compatibility
     title: product.title || product.name || 'Untitled Product',
@@ -45,7 +45,7 @@ export const normalizeProduct = (product) => {
     category: product.category || 'uncategorized',
     
     // Brand
-    brand: product.brand || 'Unknown Brand',
+    brand: product.brand || null,
     
     // Color
     color: product.color || '',

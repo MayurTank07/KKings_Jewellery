@@ -3,8 +3,9 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAdminAuth } from './context/useAdminAuth'
+import { API_BASE_URL } from '../config/api'
 
-const API_BASE = "http://localhost:5000/api/admin"
+const API_BASE = `${API_BASE_URL}/admin`
 
 const AdminLogin = () => {
   const navigate = useNavigate()
@@ -30,8 +31,6 @@ const AdminLogin = () => {
       if (!result.success) {
         throw new Error(result.error)
       }
-
-      console.log('✅ Admin login success')
 
       // ✅ redirect AFTER state update
       navigate('/admin')

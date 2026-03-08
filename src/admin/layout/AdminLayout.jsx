@@ -12,162 +12,250 @@ import {
   ArrowRightOnRectangleIcon,
   Bars3Icon,
   XMarkIcon,
+  TagIcon,
+  FolderIcon,
+  DocumentTextIcon,
+  ReceiptPercentIcon,
+  ChevronDownIcon,
+  ListBulletIcon,
 } from '@heroicons/react/24/outline'
-
-// ✅ IMPORT AUTH HOOK
 import { useAdminAuth } from '../context/useAdminAuth'
 
-const menuItems = [
-  { name: 'Dashboard', href: '/admin', icon: HomeIcon },
-  { name: 'Products', href: '/admin/products', icon: ShoppingBagIcon },
-  { name: 'Add Product', href: '/admin/upload', icon: PlusCircleIcon },
-  { name: 'Analytics', href: '/admin/analytics', icon: ChartBarIcon },
-  { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon },
-  { name: 'Customers', href: '/admin/customers', icon: UsersIcon },
-  { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon },
-  { name: 'Pages', href: '/admin/pages', icon: ChartBarIcon },
-  { name: 'CMS Content', isCategory: true },
-  { name: '  Home Page', href: '/admin/cms/home', icon: null },
-  { name: '  Footer', href: '/admin/cms/footer', icon: null },
-  { name: '  Our Story', href: '/admin/cms/our-story', icon: null },
+const NAV_GROUPS = [
+  {
+    label: null,
+    items: [
+      { name: 'Dashboard', href: '/admin', icon: HomeIcon, exact: true },
+    ]
+  },
+  {
+    label: 'Products',
+    icon: ShoppingBagIcon,
+    groupKey: 'products',
+    items: [
+      { name: 'Manage Products', href: '/admin/products', icon: ListBulletIcon },
+      { name: 'Add Product', href: '/admin/upload', icon: PlusCircleIcon },
+    ]
+  },
+  {
+    label: 'Categories',
+    icon: FolderIcon,
+    groupKey: 'categories',
+    items: [
+      { name: 'Manage Categories', href: '/admin/categories', icon: ListBulletIcon },
+      { name: 'Add Category', href: '/admin/categories', icon: PlusCircleIcon },
+    ]
+  },
+  {
+    label: 'Brands',
+    icon: TagIcon,
+    groupKey: 'brands',
+    items: [
+      { name: 'Manage Brands', href: '/admin/brands', icon: ListBulletIcon },
+      { name: 'Add Brand', href: '/admin/brands', icon: PlusCircleIcon },
+    ]
+  },
+  {
+    label: 'Sales',
+    icon: ReceiptPercentIcon,
+    groupKey: 'sales',
+    items: [
+      { name: 'Orders', href: '/admin/orders', icon: ShoppingBagIcon },
+      { name: 'Coupons', href: '/admin/coupons', icon: TagIcon },
+      { name: 'Customers', href: '/admin/customers', icon: UsersIcon },
+    ]
+  },
+  {
+    label: 'Analytics',
+    icon: ChartBarIcon,
+    groupKey: 'analytics',
+    items: [
+      { name: 'Analytics', href: '/admin/analytics', icon: ChartBarIcon },
+      { name: 'Reports', href: '/admin/reports', icon: DocumentTextIcon },
+    ]
+  },
+  {
+    label: 'Content (CMS)',
+    icon: DocumentTextIcon,
+    groupKey: 'cms',
+    items: [
+      { name: 'Home Page', href: '/admin/cms/home', icon: HomeIcon },
+      { name: 'Footer', href: '/admin/cms/footer', icon: DocumentTextIcon },
+      { name: 'Our Story', href: '/admin/cms/our-story', icon: DocumentTextIcon },
+      { name: 'Pages', href: '/admin/pages', icon: DocumentTextIcon },
+    ]
+  },
+  {
+    label: null,
+    items: [
+      { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon },
+    ]
+  },
 ]
 
 export default function AdminLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [openGroups, setOpenGroups] = useState(['products', 'categories', 'brands'])
   const location = useLocation()
   const navigate = useNavigate()
-
-  // ✅ USE AUTH
   const { logoutAdmin } = useAdminAuth()
 
-  // ✅ FIXED LOGOUT
   const handleLogout = () => {
-    logoutAdmin()              // 🔥 clears token + state
-    navigate('/')              // redirect to home
+    logoutAdmin()
+    navigate('/')
   }
 
-  const isActive = (href) => {
+  const isActive = (href, exact = false) => {
     if (!href) return false
-    if (href === '/admin') return location.pathname === href
+    if (exact) return location.pathname === href
     return location.pathname.startsWith(href)
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Mobile backdrop */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/30 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+  const isGroupActive = (group) =>
+    group.items?.some(item => isActive(item.href, item.exact))
 
-      {/* Sidebar */}
-      <div className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out
-        lg:translate-x-0 lg:static lg:inset-0
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
-        {/* Header */}
-        <div className="flex items-center justify-between h-20 px-6 border-b border-gray-200">
-          <Link to="/admin" className="flex items-center gap-3">
-            <img
-              src="https://res.cloudinary.com/dkbxrhe1v/image/upload/v1768829821/logo1_xqrmjy.png"
-              alt="KKings Admin"
-              className="h-8 object-contain"
-            />
-            <span className="text-xl font-serif font-bold text-[#ae0b0b]">
-              Admin
-            </span>
-          </Link>
+  const toggleGroup = (key) => {
+    setOpenGroups(prev =>
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+    )
+  }
 
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="lg:hidden text-[#ae0b0b]"
-          >
-            <XMarkIcon className="h-6 w-6" />
-          </button>
-        </div>
+  const currentPageName = () => {
+    for (const group of NAV_GROUPS) {
+      for (const item of group.items || []) {
+        if (isActive(item.href, item.exact)) return item.name
+      }
+    }
+    return 'Admin Dashboard'
+  }
 
-        {/* Navigation */}
-        <nav className="p-4 space-y-1">
-          {menuItems.map((item) => {
-            if (item.isCategory) {
-              return (
-                <div
-                  key={item.name}
-                  className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mt-2"
-                >
-                  {item.name}
-                </div>
-              )
-            }
-
-            const Icon = item.icon
-            const active = isActive(item.href)
-
-            return (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={`
-                  flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors
-                  ${active
-                    ? 'bg-[#ae0b0b] text-white'
-                    : 'text-gray-700 hover:bg-gray-100 hover:text-[#ae0b0b]'
-                  }
-                `}
-              >
-                {Icon ? (
-                  <Icon className="h-5 w-5" />
-                ) : (
-                  <span className="h-5 w-5" />
-                )}
-                {item.name}
-              </Link>
-            )
-          })}
-        </nav>
-
-        {/* Logout */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-4 py-3 rounded-lg font-medium text-gray-700 hover:bg-red-50 hover:text-[#b91c1c] transition-colors"
-          >
-            <ArrowRightOnRectangleIcon className="h-5 w-5" />
-            Logout
-          </button>
-        </div>
+  const SidebarContent = () => (
+    <>
+      <div className="flex items-center justify-between h-16 px-5 border-b border-gray-100">
+        <Link to="/admin" className="flex items-center gap-2.5" onClick={() => setSidebarOpen(false)}>
+          <div className="w-8 h-8 bg-[#ae0b0b] rounded-lg flex items-center justify-center text-white font-bold text-sm">KK</div>
+          <div>
+            <div className="text-sm font-bold text-gray-900">Admin Panel</div>
+            <div className="text-[10px] text-gray-400">Manage your store</div>
+          </div>
+        </Link>
+        <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-gray-600">
+          <XMarkIcon className="h-5 w-5" />
+        </button>
       </div>
 
-      {/* Main */}
-      <div className="lg:ml-64">
-        <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
-          <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden text-[#ae0b0b]"
-            >
-              <Bars3Icon className="h-6 w-6" />
-            </button>
-
-            <div className="flex items-center justify-between flex-1">
-              <div className="hidden sm:block">
-                <h1 className="text-lg font-semibold text-gray-900">
-                  {menuItems.find(item => isActive(item.href))?.name || 'Admin Dashboard'}
-                </h1>
-              </div>
-
-              <div className="flex items-center gap-4">
+      <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
+        {NAV_GROUPS.map((group, gi) => {
+          if (!group.label) {
+            return group.items.map(item => {
+              const Icon = item.icon
+              const active = isActive(item.href, item.exact)
+              return (
                 <Link
-                  to="/"
-                  className="text-sm font-medium text-[#ae0b0b] hover:opacity-80"
+                  key={item.href}
+                  to={item.href}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    active ? 'bg-[#ae0b0b] text-white' : 'text-gray-700 hover:bg-gray-100 hover:text-[#ae0b0b]'
+                  }`}
                 >
-                  View Store →
+                  <Icon className="h-4 w-4 flex-shrink-0" />
+                  {item.name}
                 </Link>
-              </div>
+              )
+            })
+          }
+
+          const GroupIcon = group.icon
+          const isOpen = openGroups.includes(group.groupKey)
+          const groupActive = isGroupActive(group)
+
+          return (
+            <div key={group.groupKey}>
+              <button
+                onClick={() => toggleGroup(group.groupKey)}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+                  groupActive && !isOpen
+                    ? 'bg-red-50 text-[#ae0b0b]'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <GroupIcon className="h-4 w-4 flex-shrink-0" />
+                  {group.label}
+                </div>
+                <ChevronDownIcon className={`h-3.5 w-3.5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isOpen && (
+                <div className="ml-3 pl-3 border-l-2 border-gray-100 mt-0.5 space-y-0.5">
+                  {group.items.map(item => {
+                    const Icon = item.icon
+                    const active = isActive(item.href, item.exact)
+                    return (
+                      <Link
+                        key={item.href}
+                        to={item.href}
+                        onClick={() => setSidebarOpen(false)}
+                        className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
+                          active ? 'bg-[#ae0b0b] text-white font-medium' : 'text-gray-600 hover:bg-gray-100 hover:text-[#ae0b0b]'
+                        }`}
+                      >
+                        <Icon className="h-3.5 w-3.5 flex-shrink-0" />
+                        {item.name}
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
             </div>
+          )
+        })}
+      </nav>
+
+      <div className="p-3 border-t border-gray-100">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-[#b91c1c] transition-colors"
+        >
+          <ArrowRightOnRectangleIcon className="h-4 w-4" />
+          Logout
+        </button>
+        <p className="text-[10px] text-center text-gray-300 mt-3">Powered by<br />StarX Innovations and IT Solutions</p>
+      </div>
+    </>
+  )
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      {/* Desktop sidebar */}
+      <aside className="hidden lg:flex lg:flex-col w-60 bg-white border-r border-gray-100 fixed inset-y-0 left-0 z-30">
+        <SidebarContent />
+      </aside>
+
+      {/* Mobile sidebar */}
+      <div className={`fixed inset-y-0 left-0 z-50 w-60 bg-white shadow-2xl flex flex-col transform transition-transform duration-300 lg:hidden ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <SidebarContent />
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 lg:ml-60">
+        <header className="sticky top-0 z-30 bg-white border-b border-gray-100 h-14 flex items-center px-4 sm:px-6">
+          <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-gray-500 mr-3">
+            <Bars3Icon className="h-5 w-5" />
+          </button>
+          <div className="flex items-center justify-between flex-1">
+            <h1 className="text-sm font-semibold text-gray-700 hidden sm:block">{currentPageName()}</h1>
+            <Link to="/" className="text-xs font-semibold text-[#ae0b0b] hover:opacity-80 ml-auto">
+              View Store →
+            </Link>
           </div>
         </header>
 

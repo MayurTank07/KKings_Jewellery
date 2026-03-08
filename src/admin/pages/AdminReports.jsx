@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { API_BASE_URL } from '../../config/api'
 import { useProduct } from '../../customer/context/ProductContext'
 import AdminCard from '../layout/AdminCard'
 import AdminButton from '../layout/AdminButton'
@@ -53,7 +54,7 @@ export default function AdminReports() {
       }
 
       const res = await fetch(
-        `http://localhost:5000/api/analytics?range=${timeRange}`,
+        `${API_BASE_URL}/analytics?range=${timeRange}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

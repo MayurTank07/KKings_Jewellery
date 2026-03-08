@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import { API_BASE_URL } from '../../config/api'
+import { useAdminAuth } from './useAdminAuth'
 
 export const OrderContext = createContext()
 
@@ -10,23 +12,53 @@ export const useOrder = () => {
   return context
 }
 
-const API_URL = "http://localhost:5000/api/orders"
+const API_URL = `${API_BASE_URL}/orders`
 
 export const OrderProvider = ({ children }) => {
   const [orders, setOrders] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const { setOrderRefreshCallback } = useAdminAuth() || {}
 
   useEffect(() => {
-    fetchOrders()
+    // Only fetch orders if admin token exists
+    const token = localStorage.getItem('kk_admin_token')
+    if (token && token !== 'undefined') {
+      fetchOrders()
+    }
+
+    // Register refresh callback with AdminAuth
+    if (setOrderRefreshCallback) {
+      setOrderRefreshCallback(() => fetchOrders)
+    }
   }, [])
 
   const fetchOrders = async () => {
+    const token = localStorage.getItem('kk_admin_token')
+    
+    // Don't fetch if no token
+    if (!token || token === 'undefined') {
+      setLoading(false)
+      return
+    }
+
+    setLoading(true)
     try {
-      const res = await fetch(API_URL)
+      const res = await fetch(API_URL, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      
+      if (!res.ok) {
+        if (res.status === 401) {
+          localStorage.removeItem('kk_admin_token')
+        }
+        throw new Error(`HTTP ${res.status}`)
+      }
+      
       const data = await res.json()
-      setOrders(data || [])
+      setOrders(data.data?.orders || data.data || data || [])
     } catch (error) {
       console.error('❌ Error loading orders:', error.message)
+      setOrders([])
     } finally {
       setLoading(false)
     }
@@ -107,6 +139,11 @@ export const OrderProvider = ({ children }) => {
     cancelled: orders.filter(o => o.status === 'cancelled').length,
   })
 
+  // Refresh orders (call after login)
+  const refreshOrders = () => {
+    fetchOrders()
+  }
+
   return (
     <OrderContext.Provider
       value={{
@@ -116,6 +153,7 @@ export const OrderProvider = ({ children }) => {
         updateOrderStatus,
         deleteOrder,
         getStats,
+        refreshOrders,
       }}
     >
       {children}

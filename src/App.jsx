@@ -22,6 +22,7 @@ import OrderSuccess from './customer/pages/OrderSuccess/OrderSuccess'
 
 import AdminLogin from './admin/AdminLogin'
 import { AdminRoute } from './admin/AdminRoute'
+import ProtectedRoute from './customer/components/ProtectedRoute'
 
 // Lazy imports
 const ProductDetails = lazy(() =>
@@ -36,11 +37,17 @@ const ProductsManagement = lazy(() => import('./admin/layout/ProductsManagement'
 const Analytics = lazy(() => import('./admin/layout/Analytics'))
 const AdminReports = lazy(() => import('./admin/pages/AdminReports'))
 const ProductUpload = lazy(() => import('./admin/ProductUpload'))
+const ProductEdit = lazy(() => import('./admin/ProductEdit'))
 const AdminOrders = lazy(() => import('./admin/pages/AdminOrders'))
+const AdminCustomers = lazy(() => import('./admin/pages/AdminCustomers'))
+const AdminSettings = lazy(() => import('./admin/pages/AdminSettings'))
+const CouponManagement = lazy(() => import('./admin/pages/CouponManagement'))
 const HomePageEditor = lazy(() => import('./admin/layout/HomePageEditor'))
 const FooterEditor = lazy(() => import('./admin/layout/FooterEditor'))
 const OurStoryEditor = lazy(() => import('./admin/layout/OurStoryEditor'))
 const Pages = lazy(() => import('./admin/layout/Pages'))
+const BrandsManagement = lazy(() => import('./admin/layout/BrandsManagement'))
+const CategoriesManagement = lazy(() => import('./admin/layout/CategoriesManagement'))
 
 // Customer Layout
 const CustomerLayout = ({ children }) => (
@@ -75,13 +82,13 @@ const App = () => {
                     <Route path="/our-story" element={<CustomerLayout><OurStory /></CustomerLayout>} />
 
                     <Route path="/cart" element={<CustomerLayout><Cart /></CustomerLayout>} />
-                    <Route path="/checkout" element={<CustomerLayout><Checkout /></CustomerLayout>} />
+                    <Route path="/checkout" element={<CustomerLayout><ProtectedRoute><Checkout /></ProtectedRoute></CustomerLayout>} />
                     <Route path="/payment" element={<CustomerLayout><Payment /></CustomerLayout>} />
 
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<SignIn />} />
 
-                    <Route path="/account" element={<CustomerLayout><Account /></CustomerLayout>} />
+                    <Route path="/account" element={<CustomerLayout><ProtectedRoute><Account /></ProtectedRoute></CustomerLayout>} />
                     <Route path="/order-success" element={<CustomerLayout><OrderSuccess /></CustomerLayout>} />
 
                     {/* ================= ADMIN LOGIN ================= */}
@@ -102,6 +109,14 @@ const App = () => {
                       path="/admin/products"
                       element={
                         <AdminRoute><ProductsWrapper /></AdminRoute>
+                      }
+                    />
+
+                    {/* Product Edit */}
+                    <Route
+                      path="/admin/products/edit/:id"
+                      element={
+                        <AdminRoute><ProductEditWrapper /></AdminRoute>
                       }
                     />
 
@@ -159,6 +174,36 @@ const App = () => {
                       element={<AdminRoute><PagesWrapper /></AdminRoute>}
                     />
 
+                    {/* Customers */}
+                    <Route
+                      path="/admin/customers"
+                      element={<AdminRoute><CustomersWrapper /></AdminRoute>}
+                    />
+
+                    {/* Settings */}
+                    <Route
+                      path="/admin/settings"
+                      element={<AdminRoute><SettingsWrapper /></AdminRoute>}
+                    />
+
+                    {/* Brands */}
+                    <Route
+                      path="/admin/brands"
+                      element={<AdminRoute><BrandsWrapper /></AdminRoute>}
+                    />
+
+                    {/* Categories */}
+                    <Route
+                      path="/admin/categories"
+                      element={<AdminRoute><CategoriesWrapper /></AdminRoute>}
+                    />
+
+                    {/* Coupons */}
+                    <Route
+                      path="/admin/coupons"
+                      element={<AdminRoute><CouponWrapper /></AdminRoute>}
+                    />
+
                     {/* Fallback */}
                     <Route path="*" element={<CustomerLayout><HomePage /></CustomerLayout>} />
 
@@ -188,6 +233,12 @@ const DashboardWrapper = () => (
 const ProductsWrapper = () => (
   <AdminOnlyLayout>
     <ProductsManagement />
+  </AdminOnlyLayout>
+)
+
+const ProductEditWrapper = () => (
+  <AdminOnlyLayout>
+    <ProductEdit />
   </AdminOnlyLayout>
 )
 
@@ -236,5 +287,35 @@ const StoryCMSWrapper = () => (
 const PagesWrapper = () => (
   <AdminOnlyLayout>
     <Pages />
+  </AdminOnlyLayout>
+)
+
+const CustomersWrapper = () => (
+  <AdminOnlyLayout>
+    <AdminCustomers />
+  </AdminOnlyLayout>
+)
+
+const SettingsWrapper = () => (
+  <AdminOnlyLayout>
+    <AdminSettings />
+  </AdminOnlyLayout>
+)
+
+const CouponWrapper = () => (
+  <AdminOnlyLayout>
+    <CouponManagement />
+  </AdminOnlyLayout>
+)
+
+const BrandsWrapper = () => (
+  <AdminOnlyLayout>
+    <BrandsManagement />
+  </AdminOnlyLayout>
+)
+
+const CategoriesWrapper = () => (
+  <AdminOnlyLayout>
+    <CategoriesManagement />
   </AdminOnlyLayout>
 )

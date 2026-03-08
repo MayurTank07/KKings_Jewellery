@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/useAuth";
+import { EyeIcon, EyeSlashIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -56,7 +57,6 @@ const Login = () => {
       const result = await login(payload);
 
       if (result.success) {
-        console.log("✅ Login successful");
         navigate("/account");
       } else {
         setError(result.error || "Login failed");
@@ -70,80 +70,98 @@ const Login = () => {
     }
   };
 
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center relative">
-      
-      {/* Logo */}
-      <div className="absolute top-4 left-4 border border-black w-6 h-6 flex items-center justify-center text-xs">
-        KJ
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-[#fdf6ec] to-[#fff1e6] flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
 
-      {/* Title */}
-      <h1 className="mt-6 text-red-600 font-semibold text-[18px] tracking-wide">
-        KKings_Jewellery
-      </h1>
-
-      {/* Login Card */}
-      <div className="mt-12 w-[430px] bg-[#F6ECC7] shadow-md px-10 py-8">
-        
-        <h2 className="text-[22px] font-semibold text-black mb-6">
-          Login
-        </h2>
-
-        {/* Error */}
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-sm text-sm">
-            {error}
-          </div>
-        )}
-
-        {/* Email / Phone */}
-        <div className="mb-5">
-          <label className="block text-[14px] text-black mb-1">
-            Email/Mobile Number
-          </label>
-          <input
-            type="text"
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
-            placeholder="Enter email or phone"
-            className="w-full h-[36px] bg-white px-3 outline-none rounded-sm border border-gray-300 focus:border-red-500"
-          />
-        </div>
-
-        {/* Password */}
-        <div className="mb-8">
-          <label className="block text-[14px] text-black mb-1">
-            Enter Password
-          </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter your password"
-            className="w-full h-[36px] bg-white px-3 outline-none rounded-sm border border-gray-300 focus:border-red-500"
-          />
-        </div>
-
-        {/* Button */}
-        <button
-          onClick={handleLogin}
-          disabled={isLoading}
-          className="w-full h-[42px] bg-[#b30000] text-white text-[16px] font-semibold rounded-sm hover:bg-[#990000] transition duration-200 disabled:opacity-50"
-        >
-          {isLoading ? "Logging in..." : "Login"}
-        </button>
-
-        {/* Signup */}
-        <p className="text-center mt-4 text-sm text-gray-600">
-          Don't have an account?{" "}
-          <Link
-            to="/signup"
-            className="text-[#b30000] font-semibold hover:underline"
-          >
-            Sign up here
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <Link to="/">
+            <h1 className="text-3xl font-serif font-bold text-[#ae0b0b] tracking-wide">KKings Jewellery</h1>
+            <p className="text-gray-500 text-sm mt-1">Sign in to your account</p>
           </Link>
-        </p>
+        </div>
+
+        {/* Card */}
+        <div className="bg-white rounded-2xl shadow-xl border border-[#f0e0c0] px-8 py-10">
+
+          {/* Error */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-start gap-3">
+              <ExclamationCircleIcon className="h-5 w-5 flex-shrink-0 mt-0.5" />
+              <span className="text-sm font-medium">{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleLogin} className="space-y-5">
+            {/* Email / Phone */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Email or Mobile Number
+              </label>
+              <input
+                type="text"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="Enter email or 10-digit phone"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#ae0b0b] focus:ring-2 focus:ring-[#ae0b0b]/10 transition-all"
+                autoComplete="email"
+              />
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#ae0b0b] focus:ring-2 focus:ring-[#ae0b0b]/10 transition-all pr-12"
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Button */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3.5 bg-[#ae0b0b] text-white text-base font-bold rounded-xl hover:bg-[#8f0a0a] active:scale-[0.99] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-[#ae0b0b]/20 mt-2"
+            >
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  Logging in...
+                </span>
+              ) : "Login"}
+            </button>
+          </form>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200"></div></div>
+            <div className="relative flex justify-center text-sm"><span className="px-4 bg-white text-gray-400">or</span></div>
+          </div>
+
+          <p className="text-center text-sm text-gray-600">
+            Don't have an account?{" "}
+            <Link to="/signup" className="text-[#ae0b0b] font-bold hover:underline">
+              Create one here
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

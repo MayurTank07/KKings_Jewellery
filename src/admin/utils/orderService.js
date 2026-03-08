@@ -1,36 +1,19 @@
 /**
- * Order Service Layer (FINAL VERSION)
+ * Order Service Layer — Real Backend
  * ==================================
- * Hybrid system:
- * - Works with localStorage
- * - Ready for backend API
- * - Integrated with analytics + Razorpay
+ * All calls go directly to the Express backend API.
  */
 
-import { recordSale } from '../../admin/utils/analyticsStorage'
+import { API_BASE_URL } from '../../config/api'
 
-const STORAGE_KEY = 'kk_orders'
-const API_BASE = 'http://localhost:5000/api/orders'
+const API_BASE = `${API_BASE_URL}/orders`
 
-// 🔥 SWITCH THIS WHEN BACKEND READY
-const USE_BACKEND = false
+const getToken = () => localStorage.getItem('kk_admin_token')
 
-// ============================================================================
-// STORAGE HELPERS
-// ============================================================================
-
-const readOrders = () => {
-  try {
-    const data = localStorage.getItem(STORAGE_KEY)
-    return data ? JSON.parse(data) : []
-  } catch {
-    return []
-  }
-}
-
-const writeOrders = (orders) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(orders))
-}
+const authHeaders = () => ({
+  'Content-Type': 'application/json',
+  Authorization: `Bearer ${getToken()}`
+})
 
 // ============================================================================
 // LOAD ORDERS
@@ -38,13 +21,9 @@ const writeOrders = (orders) => {
 
 export const loadOrders = async () => {
   try {
-    if (USE_BACKEND) {
-      const res = await fetch(API_BASE)
-      return await res.json()
-    }
-
-    return readOrders()
-
+    const res = await fetch(API_BASE, { headers: authHeaders() })
+    const data = await res.json()
+    return data.data?.orders || data.data || []
   } catch (error) {
     console.error('❌ Load orders failed:', error)
     return []
@@ -52,89 +31,26 @@ export const loadOrders = async () => {
 }
 
 // ============================================================================
-// SAVE ORDERS
+// SAVE ORDERS (bulk upsert — kept for compatibility)
 // ============================================================================
 
-export const saveOrders = async (orders) => {
-  try {
-    if (!Array.isArray(orders)) {
-      throw new Error('Orders must be array')
-    }
-
-    if (USE_BACKEND) {
-      await fetch(API_BASE + '/bulk', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orders)
-      })
-      return true
-    }
-
-    writeOrders(orders)
-    return true
-
-  } catch (error) {
-    console.error('❌ Save orders failed:', error)
-    return false
-  }
+export const saveOrders = async () => {
+  return true
 }
 
 // ============================================================================
-// CREATE ORDER (🔥 IMPORTANT)
+// CREATE ORDER
 // ============================================================================
 
 export const createOrder = async (orderData) => {
-  try {
-    if (!orderData?.orderId) {
-      throw new Error('Order ID required')
-    }
-
-    const now = new Date().toISOString()
-
-    const newOrder = {
-      ...orderData,
-      status: orderData.status || 'pending',
-      paymentStatus: orderData.paymentStatus || 'pending',
-      paymentMethod: orderData.paymentMethod || 'COD',
-      createdAt: now,
-      updatedAt: now,
-    }
-
-    // 🔥 BACKEND MODE
-    if (USE_BACKEND) {
-      const res = await fetch(API_BASE, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newOrder)
-      })
-
-      const saved = await res.json()
-
-      // 🔥 record analytics
-      recordSale(saved)
-
-      return saved
-    }
-
-    // 🔥 LOCAL MODE
-    const orders = readOrders()
-
-    if (orders.some(o => o.orderId === newOrder.orderId)) {
-      throw new Error('Duplicate order ID')
-    }
-
-    orders.push(newOrder)
-    writeOrders(orders)
-
-    // 🔥 analytics integration
-    recordSale(newOrder)
-
-    return newOrder
-
-  } catch (err) {
-    console.error('❌ Create order failed:', err.message)
-    throw err
-  }
+  const res = await fetch(API_BASE, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(orderData)
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.message || 'Create order failed')
+  return data.data
 }
 
 // ============================================================================
@@ -143,30 +59,16 @@ export const createOrder = async (orderData) => {
 
 export const updateOrderStatus = async (orderId, newStatus) => {
   const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
+  if (!validStatuses.includes(newStatus)) throw new Error('Invalid status')
 
-  if (!validStatuses.includes(newStatus)) {
-    throw new Error('Invalid status')
-  }
-
-  if (USE_BACKEND) {
-    const res = await fetch(`${API_BASE}/${orderId}/status`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus })
-    })
-    return await res.json()
-  }
-
-  const orders = readOrders()
-  const index = orders.findIndex(o => String(o.orderId) === String(orderId))
-
-  if (index === -1) throw new Error('Order not found')
-
-  orders[index].status = newStatus
-  orders[index].updatedAt = new Date().toISOString()
-
-  writeOrders(orders)
-  return orders[index]
+  const res = await fetch(`${API_BASE}/${orderId}/status`, {
+    method: 'PUT',
+    headers: authHeaders(),
+    body: JSON.stringify({ status: newStatus })
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.message || 'Update status failed')
+  return data.data
 }
 
 // ============================================================================

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Grid, TextField, Button, Box } from "@mui/material";
+import toast from 'react-hot-toast';
 
 const DeliveryAddressForm = ({ address = {}, onAddressChange }) => {
     // FIXED: Initialize form state from props and manage local state
@@ -49,12 +50,11 @@ const DeliveryAddressForm = ({ address = {}, onAddressChange }) => {
         
         // FIXED: Validate before submission
         if (!validateForm()) {
-            alert('Please fill all required fields correctly');
+            toast.error('Please fill all required fields correctly');
             return;
         }
 
         // Address is already saved in parent state via onAddressChange
-        console.log("Address saved:", formData);
     };
 
     return (

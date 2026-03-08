@@ -1,9 +1,12 @@
 import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useCart } from '../../context/useCart'
-import { CreditCardIcon, BanknotesIcon, DevicePhoneMobileIcon } from '@heroicons/react/24/outline'
+import toast from 'react-hot-toast'
+import { CreditCardIcon, BanknotesIcon, DevicePhoneMobileIcon, TicketIcon } from '@heroicons/react/24/outline'
+import { API_BASE_URL } from '../../../config/api'
+import { couponApi } from '../../../services/apiService'
 
-const API_URL = "http://localhost:5000/api"
+const API_URL = API_BASE_URL
 
 export default function Payment() {
   const navigate = useNavigate()
@@ -15,6 +18,10 @@ export default function Payment() {
   
   const [selectedMethod, setSelectedMethod] = useState('')
   const [loading, setLoading] = useState(false)
+  const [couponCode, setCouponCode] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState(null)
+  const [discount, setDiscount] = useState(0)
+  const [validatingCoupon, setValidatingCoupon] = useState(false)
   const [paymentDetails, setPaymentDetails] = useState({
     upiId: '',
     cardNumber: '',
@@ -44,9 +51,45 @@ export default function Payment() {
     }
   ]
 
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      toast.error('Please enter a coupon code')
+      return
+    }
+
+    setValidatingCoupon(true)
+    try {
+      const response = await couponApi.validate({
+        code: couponCode.toUpperCase(),
+        orderAmount: totalPrice
+      })
+
+      if (response.success) {
+        setAppliedCoupon(response.data)
+        setDiscount(response.data.discountAmount)
+        toast.success(`Coupon applied! You saved ₹${response.data.discountAmount}`)
+      }
+    } catch (error) {
+      toast.error(error.message || 'Invalid coupon code')
+      setAppliedCoupon(null)
+      setDiscount(0)
+    } finally {
+      setValidatingCoupon(false)
+    }
+  }
+
+  const handleRemoveCoupon = () => {
+    setCouponCode('')
+    setAppliedCoupon(null)
+    setDiscount(0)
+    toast.success('Coupon removed')
+  }
+
+  const finalAmount = totalPrice - discount
+
   const handlePayment = async () => {
     if (!selectedMethod) {
-      alert('Please select a payment method')
+      toast.error('Please select a payment method')
       return
     }
 
@@ -56,15 +99,20 @@ export default function Payment() {
       // Create order data
       const orderData = {
         items: cartItems.map(item => ({
-          id: item.id,
+          productId: item.id || item._id,
           name: item.title || item.name,
           price: item.selling_price || item.price,
           quantity: item.quantity,
           selectedSize: item.selectedSize,
-          image: item.images?.[0] || ''
+          image: item.images?.[0] || '',
+          subtotal: (item.selling_price || item.price) * item.quantity
         })),
-        customer: deliveryAddress,
-        total: totalPrice
+        shippingAddress: deliveryAddress,
+        subtotal: totalPrice,
+        discount: discount,
+        couponCode: appliedCoupon ? appliedCoupon.code : null,
+        totalAmount: finalAmount,
+        paymentMethod: selectedMethod
       }
 
       if (selectedMethod === 'cod') {
@@ -79,11 +127,11 @@ export default function Payment() {
 
         if (orderResponse.ok) {
           const order = await orderResponse.json()
-          alert('Order placed successfully! You will pay on delivery.')
+          toast.success('Order placed successfully! You will pay on delivery.')
           clearCart()
           navigate('/order-success', { state: { orderId: order.data._id } })
         } else {
-          alert('Failed to create order. Please try again.')
+          toast.error('Failed to create order. Please try again.')
         }
       } else {
         // For UPI/Card, create Razorpay order first
@@ -128,11 +176,11 @@ export default function Payment() {
 
               if (verifyResponse.ok) {
                 const result = await verifyResponse.json()
-                alert('Payment successful! Order placed.')
+                toast.success('Payment successful! Order placed.')
                 clearCart()
                 navigate('/order-success', { state: { orderId: result.data.order._id } })
               } else {
-                alert('Payment verification failed. Please contact support.')
+                toast.error('Payment verification failed. Please contact support.')
               }
             },
             prefill: {
@@ -147,12 +195,12 @@ export default function Payment() {
           const rzp = new window.Razorpay(options)
           rzp.open()
         } else {
-          alert('Failed to initialize payment. Please try again.')
+          toast.error('Failed to initialize payment. Please try again.')
         }
       }
     } catch (error) {
       console.error('Payment error:', error)
-      alert('Payment failed. Please try again.')
+      toast.error('Payment failed. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -189,13 +237,68 @@ export default function Payment() {
                 <span>₹{(item.selling_price || item.price) * item.quantity}</span>
               </div>
             ))}
-            <div className="border-t pt-2 mt-2">
-              <div className="flex justify-between font-semibold">
+            <div className="border-t pt-2 mt-2 space-y-2">
+              <div className="flex justify-between">
+                <span>Subtotal:</span>
+                <span>₹{totalPrice}</span>
+              </div>
+              {discount > 0 && (
+                <div className="flex justify-between text-green-600">
+                  <span>Discount ({appliedCoupon?.code}):</span>
+                  <span>-₹{discount}</span>
+                </div>
+              )}
+              <div className="flex justify-between font-semibold text-lg border-t pt-2">
                 <span>Total Amount:</span>
-                <span className="text-[#ae0b0b]">₹{totalPrice}</span>
+                <span className="text-[#ae0b0b]">₹{finalAmount}</span>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Coupon Code Section */}
+        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-6 rounded-lg mb-8 border border-yellow-200">
+          <div className="flex items-center gap-2 mb-4">
+            <TicketIcon className="h-6 w-6 text-yellow-600" />
+            <h2 className="text-xl font-semibold">Have a Coupon Code?</h2>
+          </div>
+          
+          {!appliedCoupon ? (
+            <div className="flex gap-3">
+              <input
+                type="text"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                placeholder="Enter coupon code"
+                className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#ae0b0b] uppercase"
+              />
+              <button
+                onClick={handleApplyCoupon}
+                disabled={validatingCoupon}
+                className="px-6 py-2.5 bg-[#ae0b0b] text-white rounded-lg hover:bg-[#8f0a0a] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {validatingCoupon ? 'Validating...' : 'Apply'}
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+              <div className="flex items-center gap-3">
+                <div className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center">
+                  ✓
+                </div>
+                <div>
+                  <p className="font-semibold text-green-800">Coupon Applied: {appliedCoupon.code}</p>
+                  <p className="text-sm text-green-600">You saved ₹{discount}</p>
+                </div>
+              </div>
+              <button
+                onClick={handleRemoveCoupon}
+                className="text-red-600 hover:text-red-700 font-medium text-sm"
+              >
+                Remove
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Delivery Address */}
@@ -316,10 +419,10 @@ export default function Payment() {
           </button>
           <button
             onClick={handlePayment}
-            disabled={loading || !selectedMethod}
-            className="flex-1 bg-[#ae0b0b] text-white py-3 rounded-md hover:bg-[#8a0909] disabled:bg-gray-400 disabled:cursor-not-allowed"
+            disabled={loading}
+            className="w-full bg-[#ae0b0b] text-white py-4 rounded-lg font-semibold text-lg hover:bg-[#8a0909] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {loading ? 'Processing...' : `Pay ₹${totalPrice}`}
+            {loading ? 'Processing...' : `Pay ₹${finalAmount}`}
           </button>
         </div>
       </div>

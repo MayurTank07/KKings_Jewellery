@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useProduct } from '../../customer/context/ProductContext'
-import { useOrder } from '../../customer/context/useOrder'
+import { useOrder } from '../context/OrderContext'
 import AdminCard from './AdminCard'
 import AdminButton from './AdminButton'
 
@@ -20,11 +20,6 @@ import {
   ArrowDownIcon,
   CalendarIcon,
 } from '@heroicons/react/24/outline'
-
-// ✅ FIXED ICONS
-const TrendingUpIcon = ArrowUpIcon
-const TrendingDownIcon = ArrowDownIcon
-
 import {
   calculateTotalStats,
   getMonthlySalesData,
@@ -33,7 +28,10 @@ import {
   getCustomerStats,
   getRecentOrders,
   getConversionRate,
-} from '../utils/analyticsService'
+} from '../utils/analyticsUtils'
+
+const TrendingUpIcon = ArrowUpIcon
+const TrendingDownIcon = ArrowDownIcon
 
 export default function Analytics() {
   const { products } = useProduct()
@@ -129,8 +127,8 @@ export default function Analytics() {
 
   const recentActivity = useMemo(() => {
     return getRecentOrders(10, orders).map(order => ({
-      id: order._id || order.orderId, // ✅ FIXED
-      title: `Order #${(order._id || order.orderId)?.slice(-6)}`,
+      id: order._id || order.orderId,
+      title: `Order #${String(order._id || order.orderId || 'N/A').slice(-6)}`,
       description: `${order.shippingAddress?.firstName || 'Customer'} - ${formatCurrency(order.totalAmount)}`,
       time: new Date(order.createdAt).toLocaleDateString(),
       status: order.status || 'pending'

@@ -16,10 +16,9 @@ import {
   FunnelIcon,
 } from '@heroicons/react/20/solid'
 
-import { bracelets } from '../../data/bracelet'
-import { chains } from '../../data/chains'
 import ProductCard from './ProductCard'
 import { applyFilters } from '../../components/Product/FilterData'
+import { useProduct } from '../../context/ProductContext'
 
 // SORT OPTIONS
 const sortOptions = [
@@ -32,7 +31,7 @@ const categories = ['bracelet', 'chain']
 const materials = ['gold', 'silver', 'diamond', 'rudraksha']
 
 export default function Product() {
-  const allProducts = [...bracelets, ...chains]
+  const { products: allProducts = [] } = useProduct()
 
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const [desktopFiltersOpen, setDesktopFiltersOpen] = useState(false)

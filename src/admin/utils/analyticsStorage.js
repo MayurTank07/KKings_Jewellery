@@ -4,7 +4,9 @@
  * Replaces localStorage with backend APIs
  */
 
-const API_BASE = 'http://localhost:5000/api'
+import { API_BASE_URL } from '../../config/api'
+
+const API_BASE = API_BASE_URL
 
 // 🔐 Auth token
 const getToken = () => localStorage.getItem('kk_admin_token')

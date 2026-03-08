@@ -5,8 +5,9 @@ import { StarIcon } from '@heroicons/react/20/solid'
 import { getAvailableSizes } from '../../utils/productSchemaNormalizer'
 import HomeSectionCard from '../HomeSectionCard/HomeSectionCard'
 import { useCart } from '../../context/useCart'
+import { API_BASE_URL } from '../../../config/api'
 
-const API_URL = "http://localhost:5000/api/products"
+const API_URL = `${API_BASE_URL}/products`
 
 const fallbackProduct = {
   name: 'Demo Product',
@@ -27,11 +28,12 @@ function normalize(raw) {
   if (!raw) return null
 
   const name = raw.title || raw.name || 'Product'
-  const price = raw.sellingPrice
-    ? `₹${raw.sellingPrice}`
-    : raw.price
-    ? `₹${raw.price}`
-    : '₹0'
+  
+  // Handle selling_price vs price correctly
+  const sellingPrice = raw.selling_price || raw.sellingPrice
+  const originalPrice = raw.price
+  
+  const displayPrice = sellingPrice || originalPrice || 0
 
   const images =
     raw.images && Array.isArray(raw.images) && raw.images.length > 0
@@ -43,12 +45,22 @@ function normalize(raw) {
 
   return {
     ...raw,
-    id: raw._id, // 🔥 IMPORTANT FIX
+    id: raw._id || raw.id,
     name,
-    price,
+    price: originalPrice,
+    selling_price: sellingPrice,
+    displayPrice: `₹${displayPrice}`,
     images,
     description: raw.description || '',
     highlights: raw.highlights || [],
+    material: raw.material || 'Gold',
+    purity: raw.purity || null,
+    weight: raw.weight || null,
+    sizes: raw.sizes || [],
+    hasSizes: raw.hasSizes || false,
+    reviews: raw.reviews || [],
+    averageRating: raw.averageRating || 0,
+    totalReviews: raw.totalReviews || 0,
   }
 }
 
@@ -194,12 +206,21 @@ export default function ProductDetails() {
           </div>
 
           {/* Info */}
-          <div>
-            <h1 className="text-3xl font-bold">{currentProduct.name}</h1>
-
-            <p className="mt-2 text-3xl font-semibold text-[#ae0b0b]">
-              {currentProduct.price}
-            </p>
+          <div className="mt-8">
+            <h1 className="text-3xl font-bold text-gray-900">{currentProduct.name}</h1>
+            <div className="mt-4 flex items-center gap-3">
+              {currentProduct.selling_price && currentProduct.selling_price < currentProduct.price ? (
+                <>
+                  <p className="text-2xl font-semibold text-[#ae0b0b]">₹{currentProduct.selling_price}</p>
+                  <p className="text-lg text-gray-500 line-through">₹{currentProduct.price}</p>
+                  <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">
+                    {Math.round(((currentProduct.price - currentProduct.selling_price) / currentProduct.price) * 100)}% OFF
+                  </span>
+                </>
+              ) : (
+                <p className="text-2xl font-semibold text-[#ae0b0b]">₹{currentProduct.price}</p>
+              )}
+            </div>
 
             <div className="mt-4 flex items-center">
               {[0,1,2,3,4].map(i => (
